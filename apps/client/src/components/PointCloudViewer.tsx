@@ -10,11 +10,12 @@ interface PointCloudViewerProps {
   url?: string;
 }
 
-export function PointCloudViewer({ size = 0.1, url = 'http://localhost:3000/points/sample' }: PointCloudViewerProps) {
+export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
   const [positions, setPositions] = useState<Float32Array | null>(null);
   const [colors, setColors] = useState<Float32Array | null>(null);
 
   useEffect(() => {
+    if (!url) return;
     fetch(url)
       .then((res) => res.arrayBuffer())
       .then((buffer) => {

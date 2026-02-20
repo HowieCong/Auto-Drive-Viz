@@ -11,6 +11,7 @@ import { useControls, button } from 'leva';
 import { useState, useEffect } from 'react';
 import './App.css';
 import { ProjectGuide } from './components/ProjectGuide';
+import { pointsService } from './services/PointsService';
 import type { EgoState } from './models';
 
 function App() {
@@ -31,7 +32,15 @@ function App() {
 
   // Init
   useEffect(() => {
-    fetch('http://localhost:3000/points/list')
+    // Check if running on Vercel (or static mode)
+    // If static, we use hardcoded list since we can't scan directories
+    if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+        // Delay setting file list to avoid synchronous update in effect (though it's usually fine in mount effect)
+        setTimeout(() => setFileList(['2011_09_26_drive_0001_sync']), 0);
+        return;
+    }
+
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/list`)
       .then(res => res.json())
       .then(list => {
           if (Array.isArray(list) && list.length > 0) {
@@ -41,23 +50,23 @@ function App() {
       })
       .catch(console.error);
   }, []);
-
+// ...
   // Poll Data
   useEffect(() => {
-      fetch(`http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}`)
-          .then(res => res.json())
-          .then(data => {
-              // setObjects3D(data.objects);
-              setEgoState(data.ego);
-          })
-          .catch(console.error);
+    if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+        pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState }) => {
+            setEgoState(data.ego);
+        });
+        return;
+    }
 
-      // if (perceptionMode === 'occupancy') {
-      //     fetch(`http://localhost:3000/points/occupancy?frame=${currentFrame}&file=${selectedFile}`)
-      //       .then(res => res.json())
-      //       .then(setVoxels)
-      //       .catch(console.error);
-      // }
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/scene?frame=${currentFrame}&file=${selectedFile}`)
+        .then(res => res.json())
+        .then(data => {
+            // setObjects3D(data.objects);
+            setEgoState(data.ego);
+        })
+        .catch(console.error);
   }, [currentFrame, perceptionMode, selectedFile]);
 
   // Animation Loop
