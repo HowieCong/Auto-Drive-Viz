@@ -53,7 +53,7 @@ export class PointsService implements OnModuleInit {
   // private readonly uploadDir = path.join(process.cwd(), 'uploads');
   private readonly kittiRoot = path.join(
     process.cwd(),
-    'data/kitti/2011_09_26',
+    '../../client/public/data/kitti/2011_09_26',
   );
   private currentDrive = '2011_09_26_drive_0001_sync';
 
