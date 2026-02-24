@@ -14,7 +14,7 @@ auto-drive-viz/
 │   ├── client/       # 前端项目 (React + Vite)
 │   │   ├── src/
 │   │   │   ├── components/  # 可视化组件 (PointCloudViewer, CameraWall 等)
-│   │   │   ├── models.ts    # 类型定义
+│   │   │   ├── types/       # 类型定义
 │   │   │   └── ...
 │   │   ├── ...
 │   │   └── README.md # 前端详细文档
@@ -61,15 +61,19 @@ npm run dev
 
 *   **多视图支持**: 支持透视视图 (Perspective) 和鸟瞰视图 (BEV) 切换。
 *   **多模态数据展示**:
-    *   **LiDAR 点云**: 实时渲染 3D 点云数据。
+    *   **LiDAR 点云**: 实时渲染 3D 点云数据，支持基于强度的伪彩色渲染。
     *   **相机图像**: 展示环视相机采集的图像数据。
-    *   **3D 目标检测**: 可视化 3D 边界框 (Bounding Boxes)。
-    *   **自身状态 (Ego State)**: 显示车辆的速度、航向角等信息。
+    *   **3D 目标检测**: 可视化 3D 边界框 (Bounding Boxes)，支持车辆、行人等分类。
+    *   **自身状态 (Ego State)**: 显示车辆的速度、航向角、加速度、角速度等信息。
 *   **交互控制**: 支持播放/暂停、帧跳转、点云大小调节等。
+*   **性能优化**:
+    *   使用 Web Workers 异步解析点云数据。
+    *   使用 AbortController 取消过期请求。
+    *   基于 BufferGeometry 的高效渲染。
 
 ## 数据准备
 
-本项目默认配置为读取 KITTI 数据集格式。请确保将相应的数据文件放置在 `apps/server/data/kitti` 目录下，以便后端能够正确加载。
+本项目默认配置为读取 KITTI 数据集格式。请确保将相应的数据文件放置在 `apps/client/public/data/kitti` 目录下（或配置后端读取路径），以便系统能够正确加载。
 
 ## 许可证
 
