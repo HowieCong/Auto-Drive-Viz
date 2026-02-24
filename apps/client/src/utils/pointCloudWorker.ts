@@ -60,8 +60,7 @@ self.onmessage = async (e) => {
         // Transfer buffers to main thread to avoid copying
         self.postMessage({ 
             positions: posArray.buffer, 
-            colors: colArray.buffer,
-            count: numPoints
+            colors: colArray.buffer 
         }, [posArray.buffer, colArray.buffer]);
 
     } catch (err) {
