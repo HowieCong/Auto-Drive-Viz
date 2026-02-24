@@ -10,11 +10,9 @@ import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
 
-import { GaussianSplatViewer } from '../components/GaussianSplatViewer';
-
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev'>('perspective');
-  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy' | 'gaussian'>('occupancy'); 
+  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy'>('occupancy'); 
   
   const [fileList, setFileList] = useState<string[]>(['2011_09_26_drive_0001_sync']);
   const [selectedFile, setSelectedFile] = useState<string>('2011_09_26_drive_0001_sync');
@@ -104,12 +102,9 @@ export default function Dashboard() {
         onChange: (v) => setSelectedFile(v)
     },
     'Perception Source': {
-        options: { 
-            'LiDAR (Point Cloud)': 'lidar',
-            '3D Gaussian Splatting': 'gaussian'
-        },
+        options: { 'LiDAR (Point Cloud)': 'lidar' },
         value: 'lidar',
-        onChange: (v: 'lidar' | 'occupancy' | 'gaussian') => setPerceptionMode(v)
+        onChange: (v: 'lidar' | 'occupancy') => setPerceptionMode(v)
     },
     // 'Search Scene': {
     //     value: '',
@@ -155,8 +150,8 @@ export default function Dashboard() {
                         Mode: <span style={{ color: '#00ffff' }}>{viewMode.toUpperCase()}</span>
                     </div>
                     <div style={{ background: 'rgba(0,0,0,0.6)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #555' }}>
-                        Source: <span style={{ color: perceptionMode === 'occupancy' ? '#ff00ff' : perceptionMode === 'gaussian' ? '#ffff00' : '#00ff00' }}>
-                            {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : perceptionMode === 'gaussian' ? '3DGS (SPLAT)' : 'LIDAR (RAW)'}
+                        Source: <span style={{ color: perceptionMode === 'occupancy' ? '#ff00ff' : '#00ff00' }}>
+                            {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}
                         </span>
                     </div>
                 </div>
@@ -173,18 +168,10 @@ export default function Dashboard() {
                     <gridHelper args={[200, 20, 0x444444, 0x222222]} rotation={[Math.PI / 2, 0, 0]} />
                     <axesHelper args={[2]} />
                     
-                    {/* Render PointCloud OR Gaussian Splat based on mode */}
-                    {perceptionMode === 'gaussian' ? (
-                        <GaussianSplatViewer 
-                            url={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/file/${selectedFile}.splat`} 
-                            scale={[10, 10, 10]} // Scale might need adjustment
-                            rotation={[Math.PI / 2, 0, 0]} // Rotate to match Z-up
-                        />
-                    ) : (
-                        <PointCloudViewer size={pointSize} url={url} />
-                    )}
+                    {/* Always render PointCloud as base */}
+                    <PointCloudViewer size={pointSize} url={url} />
 
-                    {/* 3D Bounding Boxes (Overlay on both) */}
+                    {/* 3D Bounding Boxes */}
                     {objects3D.map(obj => (
                         <BoundingBox3DVisualizer 
                             key={obj.id} 

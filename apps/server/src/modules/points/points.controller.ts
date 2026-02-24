@@ -4,7 +4,6 @@ import {
   Post,
   Res,
   Query,
-  Param,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PointsService } from './points.service';
@@ -76,20 +75,5 @@ export class PointsController {
   @Get('list')
   listFiles() {
     return this.pointsService.getFiles();
-  }
-
-  @Get('file/:name')
-  getFile(@Param('name') name: string, @Res() res: Response) {
-      try {
-          const stream = this.pointsService.getFileStream(name);
-          // Guess content type
-          if (name.endsWith('.splat')) res.set('Content-Type', 'application/octet-stream');
-          else if (name.endsWith('.json')) res.set('Content-Type', 'application/json');
-          else res.set('Content-Type', 'application/octet-stream');
-          
-          stream.pipe(res);
-      } catch (e) {
-          res.status(404).send('File not found');
-      }
   }
 }
