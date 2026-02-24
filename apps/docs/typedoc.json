@@ -1,0 +1,16 @@
+{
+  "entryPoints": [
+    "index.ts",
+    "content/frontend.md",
+    "content/backend.md",
+    "content/dataset.md"
+  ],
+  "out": "../client/public/docs",
+  "name": "AutoDriveViz Documentation",
+  "readme": "none",
+  "cleanOutputDir": true,
+  "plugin": [],
+  "theme": "default",
+  "entryPointStrategy": "resolve",
+  "includeVersion": true
+}
