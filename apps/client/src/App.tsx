@@ -10,7 +10,7 @@ import { usePerformanceMonitor } from './components/PerformanceMonitor'; // Impo
 import { useControls, button } from 'leva';
 import { useState, useEffect } from 'react';
 import './App.css';
-import { ProjectGuide } from './components/ProjectGuide';
+// import { ProjectGuide } from './components/ProjectGuide';
 import { pointsService } from './services/PointsService';
 import type { EgoState } from './models';
 
@@ -114,8 +114,6 @@ function App() {
         <div style={{ height: '60px', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '20px', background: '#1a1a1a' }}>
             <h2 style={{ margin: 0, color: '#00ffff', fontStyle: 'italic' }}>AutoDrive<span style={{color:'white'}}>Viz</span></h2>
             
-            <ProjectGuide />
-
             <div style={{ height: '30px', borderLeft: '1px solid #444' }} />
             
             <button 
