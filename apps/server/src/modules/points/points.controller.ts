@@ -3,12 +3,7 @@ import {
   Get,
   Post,
   Res,
-  UseInterceptors,
-  UploadedFile,
-  Param,
   Query,
-  Headers,
-  Res,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PointsService } from './points.service';
