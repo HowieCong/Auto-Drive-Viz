@@ -1,4 +1,4 @@
-import type { EgoState } from '../models';
+import type { EgoState } from '../types';
 
 interface CockpitPanelProps {
     ego: EgoState | null;

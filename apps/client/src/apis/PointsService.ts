@@ -1,34 +1,7 @@
 
 import * as xml2js from 'xml2js';
 
-interface BoundingBox3D {
-  x: number;
-  y: number;
-  z: number;
-  w: number;
-  l: number;
-  h: number;
-  yaw: number;
-  label: string;
-  id: number;
-}
-
-interface EgoState {
-  speed: number;
-  heading: number;
-  acceleration: number; // af: forward acceleration
-  yawRate: number;     // wz: angular velocity around z
-  timestamp: number;
-}
-
-interface BoundingBox2D {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  label: string;
-  confidence: number;
-}
+import type { BoundingBox3D, EgoState, BoundingBox2D } from '../types';
 
 export class PointsService {
   private kittiRoot = '/data/kitti/2011_09_26';

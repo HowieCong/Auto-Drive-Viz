@@ -1,6 +1,6 @@
 import { VideoPlayer } from './VideoPlayer';
 import { VideoContainer } from './VideoContainer';
-import type { BoundingBox2D } from '../models';
+import type { BoundingBox2D } from '../types';
 import { useState, useEffect } from 'react';
 
 interface CameraWallProps {
@@ -16,7 +16,7 @@ const CAMERAS = [
   { id: 'image_01', label: 'FRONT (Gray Right)' },
 ];
 
-import { pointsService } from '../services/PointsService';
+import { pointsService } from '../apis/PointsService';
 
 export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
   const [boxesMap, setBoxesMap] = useState<Record<string, BoundingBox2D[]>>({});
