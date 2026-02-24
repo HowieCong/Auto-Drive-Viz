@@ -5,7 +5,7 @@ import { CameraWall } from '../components/CameraWall';
 import { CockpitPanel } from '../components/CockpitPanel';
 import { usePerformanceMonitor } from '../components/PerformanceMonitor';
 import { useControls, button } from 'leva';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
@@ -20,23 +20,18 @@ export default function Dashboard() {
   // State
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
   
   // Data
   const [objects3D, setObjects3D] = useState<BoundingBox3D[]>([]);
   const [egoState, setEgoState] = useState<EgoState | null>(null);
-
-  // Cache - using ref to avoid re-renders and modification issues
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const frameCache = useMemo(() => new Map<number, { ego: EgoState, objects: BoundingBox3D[] }>(), [selectedFile]);
+  // const [voxels, setVoxels] = useState<Voxel[]>([]);
 
   // Init
   useEffect(() => {
-    // Clear cache when file changes
-    frameCache.clear();
-    
-    // ... (Existing init code)
+    // Check if running on Vercel (or static mode)
+    // If static, we use hardcoded list since we can't scan directories
     if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+        // Delay setting file list to avoid synchronous update in effect (though it's usually fine in mount effect)
         setTimeout(() => setFileList(['2011_09_26_drive_0001_sync']), 0);
         return;
     }
@@ -46,86 +41,50 @@ export default function Dashboard() {
       .then(list => {
           if (Array.isArray(list) && list.length > 0) {
               setFileList(list);
+              // setSelectedFile(list[0]); // Keep default or auto-select
           }
       })
       .catch(console.error);
   }, []);
-
-  // Pre-fetch Data Logic
-  const fetchFrameData = useCallback(async (frame: number) => {
-    if (frameCache.has(frame)) return frameCache.get(frame);
-
-    try {
-        let data;
-        if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
-            data = await pointsService.getSceneObjects(frame);
-        } else {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/scene?frame=${frame}&file=${selectedFile}`);
-            data = await res.json();
-        }
-        
-        // Cache and return
-        if (data) {
-             frameCache.set(frame, data);
-        }
-        return data;
-    } catch (e) {
-        console.error('Fetch error:', e);
-        return null;
-    }
-  }, [selectedFile, frameCache]);
-
-  // Buffer upcoming frames
+// ...
+  // Poll Data
   useEffect(() => {
-    if (!isPlaying) return;
-    
-    const bufferSize = 5;
-    const maxFrame = 19; // Should be dynamic based on drive
-    
-    for (let i = 1; i <= bufferSize; i++) {
-        const nextFrame = (currentFrame + i) % (maxFrame + 1);
-        if (!frameCache.has(nextFrame)) {
-            fetchFrameData(nextFrame);
-        }
-    }
-  }, [currentFrame, isPlaying, fetchFrameData, frameCache]);
-
-  // Render Loop (Update State)
-  useEffect(() => {
-    let active = true;
-    const data = frameCache.get(currentFrame);
-    if (data) {
-        setEgoState(data.ego);
-        setObjects3D(data.objects);
-        setIsBuffering(false);
-    } else {
-        // Fetch immediately if not in cache
-        setIsBuffering(true);
-        fetchFrameData(currentFrame).then(data => {
-            if (active && data) {
-                setEgoState(data.ego);
-                setObjects3D(data.objects);
-                setIsBuffering(false);
-            }
+    // Throttling or debouncing could be added here if frame updates are too fast
+    if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+        pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
+            setEgoState(data.ego);
+            setObjects3D(data.objects);
         });
+        return;
     }
-    return () => { active = false; };
-  }, [currentFrame, fetchFrameData, frameCache]);
 
-  // Animation Loop (Timer)
+    // AbortController for cleaning up pending requests
+    const controller = new AbortController();
+
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/scene?frame=${currentFrame}&file=${selectedFile}`, {
+        signal: controller.signal
+    })
+        .then(res => res.json())
+        .then(data => {
+            setObjects3D(data.objects);
+            setEgoState(data.ego);
+        })
+        .catch(err => {
+            if (err.name !== 'AbortError') console.error(err);
+        });
+
+    return () => controller.abort();
+  }, [currentFrame, perceptionMode, selectedFile]);
+
+  // Animation Loop
   useEffect(() => {
-      let timeoutId: NodeJS.Timeout;
-      const loop = () => {
-          if (isPlaying) {
-              setCurrentFrame(f => (f + 1) % 20); 
-              timeoutId = setTimeout(loop, 100); // 10 FPS
-          }
-      };
-      
+      let interval: any;
       if (isPlaying) {
-          loop();
+          interval = setInterval(() => {
+              setCurrentFrame(f => (f + 1) % 20); 
+          }, 100);
       }
-      return () => clearTimeout(timeoutId);
+      return () => clearInterval(interval);
   }, [isPlaying]);
 
   // Activate Performance Monitor in Leva
@@ -173,7 +132,6 @@ export default function Dashboard() {
 
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span>Frame: {currentFrame}</span>
-                {isBuffering && <span style={{ color: 'orange', fontSize: '12px' }}> (Buffering...)</span>}
                 <input 
                     type="range" min={0} max={19} value={currentFrame} 
                     onChange={e => setCurrentFrame(parseInt(e.target.value))} 
