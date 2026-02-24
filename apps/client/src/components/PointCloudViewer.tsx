@@ -8,22 +8,48 @@ extend({ PointsMaterial });
 interface PointCloudViewerProps {
   size?: number;
   url?: string;
-  lodLevel?: number;
 }
 
-export function PointCloudViewer({ size = 0.1, url, lodLevel = 1.0 }: PointCloudViewerProps) {
-  const [positions, setPositions] = useState<Float32Array | null>(null);
-  const [colors, setColors] = useState<Float32Array | null>(null);
+export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
+  // Use a persistent buffer geometry to avoid re-allocation
+  const geometryRef = useRef<BufferGeometry>(null);
   const workerRef = useRef<Worker | null>(null);
+
+  // Initialize buffers once (max 150k points for KITTI)
+  const MAX_POINTS = 150000;
+  
+  const initialPositions = useMemo(() => new Float32Array(MAX_POINTS * 3), []);
+  const initialColors = useMemo(() => new Float32Array(MAX_POINTS * 3), []);
 
   useEffect(() => {
     // Initialize Worker
     workerRef.current = new Worker(new URL('../utils/pointCloudWorker.ts', import.meta.url), { type: 'module' });
     
     workerRef.current.onmessage = (e) => {
-        const { positions: posBuffer, colors: colBuffer } = e.data;
-        setPositions(new Float32Array(posBuffer));
-        setColors(new Float32Array(colBuffer));
+        const { positions: posBuffer, colors: colBuffer, count } = e.data;
+        
+        if (geometryRef.current) {
+            const geom = geometryRef.current;
+            const positions = new Float32Array(posBuffer);
+            const colors = new Float32Array(colBuffer);
+
+            // Update attributes
+            // We assume the worker returns a buffer that fits into our pre-allocated one, 
+            // OR we can just swap the buffer if we want (but swapping might cause GC).
+            // Actually, for best performance in React Three Fiber, we can just update the array.
+            
+            // Optimization: If the worker transfers the buffer, we can just set it.
+            // But BufferAttribute expects a typed array.
+            
+            geom.attributes.position.array.set(positions);
+            geom.attributes.position.needsUpdate = true;
+            
+            geom.attributes.color.array.set(colors);
+            geom.attributes.color.needsUpdate = true;
+            
+            geom.setDrawRange(0, count);
+            geom.computeBoundingSphere();
+        }
     };
 
     return () => {
@@ -33,22 +59,27 @@ export function PointCloudViewer({ size = 0.1, url, lodLevel = 1.0 }: PointCloud
 
   useEffect(() => {
     if (!url || !workerRef.current) return;
-    workerRef.current.postMessage({ url, lodLevel });
-  }, [url, lodLevel]);
-
-  const geometry = useMemo(() => {
-    if (!positions || !colors) return null;
-    const geom = new BufferGeometry();
-    geom.setAttribute('position', new Float32BufferAttribute(positions, 3));
-    geom.setAttribute('color', new Float32BufferAttribute(colors, 3));
-    geom.computeBoundingSphere(); 
-    return geom;
-  }, [positions, colors]);
-
-  if (!geometry) return null;
+    workerRef.current.postMessage({ url });
+  }, [url]);
 
   return (
-    <points geometry={geometry}>
+    <points>
+      <bufferGeometry ref={geometryRef}>
+        <bufferAttribute
+            attach="attributes-position"
+            count={MAX_POINTS}
+            array={initialPositions}
+            itemSize={3}
+            usage={35048} // THREE.DynamicDrawUsage
+        />
+        <bufferAttribute
+            attach="attributes-color"
+            count={MAX_POINTS}
+            array={initialColors}
+            itemSize={3}
+            usage={35048} // THREE.DynamicDrawUsage
+        />
+      </bufferGeometry>
       <pointsMaterial 
         vertexColors 
         size={size} 

@@ -169,7 +169,7 @@ export default function Dashboard() {
                     <axesHelper args={[2]} />
                     
                     {/* Always render PointCloud as base */}
-                    <PointCloudViewer size={pointSize} url={url} lodLevel={lodLevel} />
+                    <PointCloudViewer size={pointSize} url={url} />
 
                     {/* 3D Bounding Boxes */}
                     {objects3D.map(obj => (
