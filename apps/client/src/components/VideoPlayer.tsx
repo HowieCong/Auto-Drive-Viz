@@ -17,11 +17,10 @@ interface VideoPlayerProps {
     mode?: 'video' | 'image-sequence';
 }
 
-export function VideoPlayer({ src, frame, onTimeUpdate, boxes = [], mode = 'video' }: VideoPlayerProps) {
+export function VideoPlayer({ src, frame, onTimeUpdate, boxes = [], mode = 'image-sequence' }: VideoPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const imgRef = useRef<HTMLImageElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [dimensions, setDimensions] = useState({ width: 1242, height: 375 }); // Default to KITTI approx
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); 
 
     // Sync video time with frame prop
     useEffect(() => {
@@ -30,16 +29,17 @@ export function VideoPlayer({ src, frame, onTimeUpdate, boxes = [], mode = 'vide
         }
     }, [frame, mode]);
 
-    // Handle Image Load for Dimensions
     const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
         const { naturalWidth, naturalHeight } = e.currentTarget;
-        setDimensions({ width: naturalWidth, height: naturalHeight });
+        if (naturalWidth !== dimensions.width || naturalHeight !== dimensions.height) {
+            setDimensions({ width: naturalWidth, height: naturalHeight });
+        }
     };
 
     // Draw boxes
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || dimensions.width === 0) return;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -49,28 +49,24 @@ export function VideoPlayer({ src, frame, onTimeUpdate, boxes = [], mode = 'vide
 
         // Draw
         boxes.forEach(box => {
-            // Scale if needed
-            // If canvas matches image dimensions, scale is 1
-            const scaleX = canvas.width / dimensions.width;
-            const scaleY = canvas.height / dimensions.height;
-
+            // No scaling needed if canvas matches image dimensions exactly
             ctx.strokeStyle = '#00ff00';
             ctx.lineWidth = 2;
-            ctx.strokeRect(box.x * scaleX, box.y * scaleY, box.w * scaleX, box.h * scaleY);
+            ctx.strokeRect(box.x, box.y, box.w, box.h);
 
             ctx.fillStyle = '#00ff00';
             ctx.font = '14px Arial';
-            ctx.fillText(`${box.label} ${(box.confidence * 100).toFixed(0)}%`, box.x * scaleX, box.y * scaleY - 5);
+            ctx.fillText(`${box.label} ${(box.confidence * 100).toFixed(0)}%`, box.x, box.y - 5);
         });
     }, [boxes, dimensions]);
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', width: '100%', background: '#000' }}>
             {mode === 'video' ? (
                 <video 
                     ref={videoRef}
                     src={src}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    style={{ width: '100%', display: 'block' }}
                     controls={false}
                     muted
                     onTimeUpdate={() => {
@@ -83,20 +79,28 @@ export function VideoPlayer({ src, frame, onTimeUpdate, boxes = [], mode = 'vide
                 />
             ) : (
                 <img 
-                    ref={imgRef}
-                    src={`${src}${src.includes('?') ? '&' : '?'}frame=${frame}`}
+                    src={src}
                     alt="Sequence"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    style={{ width: '100%', display: 'block' }}
                     onLoad={handleImageLoad}
                 />
             )}
             
-            <canvas 
-                ref={canvasRef}
-                width={dimensions.width}
-                height={dimensions.height}
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', objectFit: 'contain' }}
-            />
+            {dimensions.width > 0 && (
+                <canvas 
+                    ref={canvasRef}
+                    width={dimensions.width}
+                    height={dimensions.height}
+                    style={{ 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        width: '100%', 
+                        height: '100%', 
+                        pointerEvents: 'none' 
+                    }}
+                />
+            )}
         </div>
     );
 }

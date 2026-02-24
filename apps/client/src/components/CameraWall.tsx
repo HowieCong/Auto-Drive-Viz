@@ -1,4 +1,5 @@
 import { VideoPlayer } from './VideoPlayer';
+import { VideoContainer } from './VideoContainer';
 import type { BoundingBox2D } from '../models';
 import { useState, useEffect } from 'react';
 
@@ -53,32 +54,22 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
   return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: '1fr 1fr',
+        display: 'flex',
+        flexDirection: 'column',
         height: '100%',
+        overflowY: 'auto',
         gap: '2px',
         background: '#000',
       }}
     >
       {CAMERAS.map((cam) => (
-        <div
+        <VideoContainer
           key={cam.id}
-          style={{ position: 'relative', border: '1px solid #333' }}
+          label={cam.label}
+          src={getImageUrl(cam.id)}
+          frame={frame}
+          onTimeUpdate={cam.id === 'image_02' ? onTimeUpdate : undefined}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: 5,
-              left: 5,
-              zIndex: 10,
-              background: 'rgba(0,0,0,0.5)',
-              padding: '2px 5px',
-              fontSize: '10px',
-            }}
-          >
-            {cam.label}
-          </div>
           <VideoPlayer
             src={getImageUrl(cam.id)}
             frame={frame}
@@ -86,7 +77,7 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
             mode="image-sequence"
             boxes={boxesMap[cam.id] || []}
           />
-        </div>
+        </VideoContainer>
       ))}
     </div>
   );
