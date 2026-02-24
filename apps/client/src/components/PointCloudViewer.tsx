@@ -71,6 +71,7 @@ export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
             array={initialPositions}
             itemSize={3}
             usage={35048} // THREE.DynamicDrawUsage
+            args={[initialPositions, 3]}
         />
         <bufferAttribute
             attach="attributes-color"
@@ -78,6 +79,7 @@ export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
             array={initialColors}
             itemSize={3}
             usage={35048} // THREE.DynamicDrawUsage
+            args={[initialColors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial 
