@@ -6,8 +6,9 @@ import { CockpitPanel } from '../components/CockpitPanel';
 import { usePerformanceMonitor } from '../components/PerformanceMonitor';
 import { useControls, button } from 'leva';
 import { useState, useEffect } from 'react';
+import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
-import type { EgoState } from '../types';
+import type { EgoState, BoundingBox3D } from '../types';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev'>('perspective');
@@ -21,7 +22,7 @@ export default function Dashboard() {
   const [isPlaying, setIsPlaying] = useState(false);
   
   // Data
-  // const [objects3D, setObjects3D] = useState<BoundingBox3D[]>([]);
+  const [objects3D, setObjects3D] = useState<BoundingBox3D[]>([]);
   const [egoState, setEgoState] = useState<EgoState | null>(null);
   // const [voxels, setVoxels] = useState<Voxel[]>([]);
 
@@ -49,8 +50,9 @@ export default function Dashboard() {
   // Poll Data
   useEffect(() => {
     if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
-        pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState }) => {
+        pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
             setEgoState(data.ego);
+            setObjects3D(data.objects);
         });
         return;
     }
@@ -58,7 +60,7 @@ export default function Dashboard() {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/scene?frame=${currentFrame}&file=${selectedFile}`)
         .then(res => res.json())
         .then(data => {
-            // setObjects3D(data.objects);
+            setObjects3D(data.objects);
             setEgoState(data.ego);
         })
         .catch(console.error);
@@ -158,6 +160,15 @@ export default function Dashboard() {
                     
                     {/* Always render PointCloud as base */}
                     <PointCloudViewer size={pointSize} url={url} />
+
+                    {/* 3D Bounding Boxes */}
+                    {objects3D.map(obj => (
+                        <BoundingBox3DVisualizer 
+                            key={obj.id} 
+                            box={obj} 
+                            color={obj.label === 'Car' ? '#00ff00' : obj.label === 'Pedestrian' ? '#ff0000' : '#ffff00'} 
+                        />
+                    ))}
 
                     <mesh position={[0, 0, 0.5]}>
                         <boxGeometry args={[2, 4.5, 1.5]} />
