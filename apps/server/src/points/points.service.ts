@@ -27,8 +27,9 @@ export interface BoundingBox3D {
 
 export interface EgoState {
   speed: number;
-  steeringAngle: number;
   heading: number;
+  acceleration: number; // m/s^2
+  yawRate: number;     // rad/s
   timestamp: number;
 }
 
@@ -323,20 +324,21 @@ export class PointsService implements OnModuleInit {
 
         const speed = vals[8]; // vf (forward velocity)
         const heading = vals[5]; // yaw
-        // steering angle is not directly in oxts, can be approximated or just 0 for now
-        // actually maybe yaw rate? wz is index 19.
+        const acceleration = vals[14]; // af
+        const yawRate = vals[19]; // wz
 
         return {
           speed: speed, // m/s
-          steeringAngle: 0,
           heading: heading,
+          acceleration: acceleration,
+          yawRate: yawRate,
           timestamp: Date.now(), // Mock timestamp or calculate from frame
         };
       }
     } catch {
       // ignore
     }
-    return { speed: 0, steeringAngle: 0, heading: 0, timestamp: Date.now() };
+    return { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() };
   }
 
   getReal2DBoxes(frame: number, camera: string = 'image_02'): BoundingBox2D[] {
@@ -493,7 +495,7 @@ export class PointsService implements OnModuleInit {
     } catch {
       return {
         objects: [],
-        ego: { speed: 0, steeringAngle: 0, heading: 0, timestamp: Date.now() },
+        ego: { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() },
       };
     }
   }
