@@ -53,7 +53,7 @@ export class PointsService implements OnModuleInit {
   // private readonly uploadDir = path.join(process.cwd(), 'uploads');
   private readonly kittiRoot = path.join(
     process.cwd(),
-    '../../client/public/data/kitti/2011_09_26',
+    '../client/public/data/kitti/2011_09_26',
   );
   private currentDrive = '2011_09_26_drive_0001_sync';
 
@@ -603,13 +603,13 @@ export class PointsService implements OnModuleInit {
       return [];
     }
   }
-  getFileBuffer(name: string): Buffer {
+  getFileBuffer(_name: string): Buffer {
     return Buffer.alloc(0);
   }
-  getVideoStream(name: string) {
+  getVideoStream(_name: string) {
     return { stream: fs.createReadStream(''), size: 0 };
   }
-  searchScenes(query: string): Promise<SearchResult[]> {
+  searchScenes(_query: string): Promise<SearchResult[]> {
     return Promise.resolve([]);
   }
 }
