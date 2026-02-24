@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
-import { BufferGeometry, Float32BufferAttribute, PointsMaterial } from 'three';
+import { useEffect, useMemo, useRef } from 'react';
+import { BufferGeometry, PointsMaterial } from 'three';
 import { extend } from '@react-three/fiber';
 
 // Extend PointsMaterial to include custom properties if needed (not strictly necessary here)
