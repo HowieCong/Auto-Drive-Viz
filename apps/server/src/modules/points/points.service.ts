@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
-import { BoundingBox3D, EgoState, BoundingBox2D, Voxel, SearchResult } from '../common/types';
+import { BoundingBox3D, EgoState, BoundingBox2D, Voxel } from '../../common/types';
 
 @Injectable()
 export class PointsService implements OnModuleInit {
@@ -543,10 +543,6 @@ export class PointsService implements OnModuleInit {
     return '#ff0000'; // High
   }
 
-  // Stub methods for file uploads/search (not used in KITTI mode)
-  saveFile(file: any): Promise<{ filename: string }> {
-    return Promise.resolve({ filename: file ? file.originalname : '' });
-  }
   getFiles(): string[] {
     try {
       if (!fs.existsSync(this.kittiRoot)) return [];
@@ -559,14 +555,5 @@ export class PointsService implements OnModuleInit {
     } catch {
       return [];
     }
-  }
-  getFileBuffer(_name: string): Buffer {
-    return Buffer.alloc(0);
-  }
-  getVideoStream(_name: string) {
-    return { stream: fs.createReadStream(''), size: 0 };
-  }
-  searchScenes(_query: string): Promise<SearchResult[]> {
-    return Promise.resolve([]);
   }
 }
