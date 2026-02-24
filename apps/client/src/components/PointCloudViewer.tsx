@@ -8,9 +8,10 @@ extend({ PointsMaterial });
 interface PointCloudViewerProps {
   size?: number;
   url?: string;
+  lodLevel?: number;
 }
 
-export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
+export function PointCloudViewer({ size = 0.1, url, lodLevel = 1.0 }: PointCloudViewerProps) {
   const [positions, setPositions] = useState<Float32Array | null>(null);
   const [colors, setColors] = useState<Float32Array | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -32,8 +33,8 @@ export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
 
   useEffect(() => {
     if (!url || !workerRef.current) return;
-    workerRef.current.postMessage({ url });
-  }, [url]);
+    workerRef.current.postMessage({ url, lodLevel });
+  }, [url, lodLevel]);
 
   const geometry = useMemo(() => {
     if (!positions || !colors) return null;
