@@ -15,7 +15,7 @@ export function VideoContainer({
   label, 
   src, 
   frame, 
-  totalFrames = 108,
+  totalFrames = 20,
   onTimeUpdate, 
   onDownload,
   children 

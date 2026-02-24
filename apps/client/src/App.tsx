@@ -74,7 +74,7 @@ function App() {
       let interval: any;
       if (isPlaying) {
           interval = setInterval(() => {
-              setCurrentFrame(f => (f + 1) % 108); 
+              setCurrentFrame(f => (f + 1) % 20); 
           }, 100);
       }
       return () => clearInterval(interval);
@@ -126,7 +126,7 @@ function App() {
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span>Frame: {currentFrame}</span>
                 <input 
-                    type="range" min={0} max={107} value={currentFrame} 
+                    type="range" min={0} max={19} value={currentFrame} 
                     onChange={e => setCurrentFrame(parseInt(e.target.value))} 
                     style={{ flex: 1, accentColor: '#00ffff' }}
                 />
