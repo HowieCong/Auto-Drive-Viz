@@ -15,8 +15,9 @@ interface BoundingBox3D {
 
 interface EgoState {
   speed: number;
-  steeringAngle: number;
   heading: number;
+  acceleration: number; // af: forward acceleration
+  yawRate: number;     // wz: angular velocity around z
   timestamp: number;
 }
 
@@ -103,18 +104,19 @@ export class PointsService {
           const name = frame.toString().padStart(10, '0') + '.txt';
           const url = `${this.kittiRoot}/${this.currentDrive}/oxts/${name}`; // Moved to public
           const res = await fetch(url);
-          if (!res.ok) return { speed: 0, steeringAngle: 0, heading: 0, timestamp: Date.now() };
+          if (!res.ok) return { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() };
           
           const content = await res.text();
           const vals = content.trim().split(' ').map(Number);
           return {
               speed: vals[8],
-              steeringAngle: 0,
               heading: vals[5],
+              acceleration: vals[14],
+              yawRate: vals[19],
               timestamp: Date.now()
           };
       } catch {
-          return { speed: 0, steeringAngle: 0, heading: 0, timestamp: Date.now() };
+          return { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() };
       }
   }
 

@@ -9,7 +9,15 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
 
     // Convert speed m/s to km/h
     const speedKmh = (ego.speed * 3.6).toFixed(1);
-    const steeringDeg = (ego.steeringAngle * 180 / Math.PI).toFixed(1);
+    // const steeringDeg = (ego.steeringAngle * 180 / Math.PI).toFixed(1);
+    const accel = ego.acceleration.toFixed(2);
+    const yawRateDeg = (ego.yawRate * 180 / Math.PI).toFixed(1);
+
+    // Calculate cardinal direction
+    const deg = (ego.heading * 180 / Math.PI + 360) % 360;
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const dirIdx = Math.round(deg / 45) % 8;
+    const direction = dirs[dirIdx];
 
     return (
         <div style={{
@@ -34,20 +42,20 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
             </div>
             
             <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '12px', color: '#888' }}>STEERING</div>
-                <div style={{ fontSize: '24px', color: Number(steeringDeg) > 0 ? '#ff00ff' : '#00ff00' }}>
-                    {steeringDeg}°
+                <div style={{ fontSize: '12px', color: '#888' }}>ACCEL</div>
+                <div style={{ fontSize: '24px', color: Number(accel) > 0 ? '#ff00ff' : '#00ff00' }}>
+                    {accel} <span style={{fontSize: '14px'}}>m/s²</span>
                 </div>
             </div>
 
             <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '12px', color: '#888' }}>GEAR</div>
-                <div style={{ fontSize: '24px', color: 'white' }}>D</div>
+                <div style={{ fontSize: '12px', color: '#888' }}>YAW RATE</div>
+                <div style={{ fontSize: '24px', color: 'white' }}>{yawRateDeg}°/s</div>
             </div>
             
              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '12px', color: '#888' }}>TIME</div>
-                <div style={{ fontSize: '24px', color: '#aaa' }}>{(ego.timestamp / 1000).toFixed(1)}</div>
+                <div style={{ fontSize: '12px', color: '#888' }}>HEADING</div>
+                <div style={{ fontSize: '24px', color: '#aaa' }}>{direction} <span style={{fontSize: '14px'}}>({deg.toFixed(0)}°)</span></div>
             </div>
         </div>
     );

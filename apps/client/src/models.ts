@@ -21,10 +21,11 @@ export interface BoundingBox3D {
 }
 
 export interface EgoState {
-  speed: number; // m/s
-  steeringAngle: number; // rad
-  heading: number; // rad
-  timestamp: number;
+    speed: number;
+    heading: number;
+    acceleration: number; // m/s^2
+    yawRate: number;     // rad/s
+    timestamp: number;
 }
 
 export interface Voxel {
