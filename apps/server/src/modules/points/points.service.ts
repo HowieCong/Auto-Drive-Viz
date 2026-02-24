@@ -556,4 +556,30 @@ export class PointsService implements OnModuleInit {
       return [];
     }
   }
+
+  getFileStream(name: string): fs.ReadStream {
+      // Allow .splat files or other assets
+      // Name usually is "2011_09_26_drive_0001_sync.splat"
+      // We look for it in kittiRoot/name OR kittiRoot/drive/name?
+      // Let's assume user puts splat file inside the drive folder or just root.
+      // If name matches a drive folder + .splat, we check inside.
+      
+      let filePath = path.join(this.kittiRoot, name);
+      if (fs.existsSync(filePath)) return fs.createReadStream(filePath);
+      
+      // Check inside the drive folder if name is like "drive_sync.splat"
+      // Or maybe the request is "drive_sync/scene.splat"?
+      // For now, assume flat or relative path.
+      
+      // Try to find if a folder exists with the name without extension
+      const driveName = name.replace('.splat', '');
+      filePath = path.join(this.kittiRoot, driveName, 'scene.splat');
+      if (fs.existsSync(filePath)) return fs.createReadStream(filePath);
+      
+      // Fallback: Check if file exists in drive folder with same name
+      filePath = path.join(this.kittiRoot, driveName, name);
+      if (fs.existsSync(filePath)) return fs.createReadStream(filePath);
+
+      throw new Error(`File not found: ${name}`);
+  }
 }
