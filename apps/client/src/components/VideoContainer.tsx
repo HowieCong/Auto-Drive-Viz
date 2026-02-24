@@ -64,7 +64,7 @@ export function VideoContainer({
   };
 
   return (
-    <div style={{ position: 'relative', border: '1px solid #333', flexShrink: 0, background: '#000' }}>
+    <div style={{ position: 'relative', border: '1px solid #333', flexShrink: 0, background: '#000', display: 'flex', flexDirection: 'column' }}>
       {/* Top Bar - Now outside video, above it */}
       <div style={{
         width: '100%',
