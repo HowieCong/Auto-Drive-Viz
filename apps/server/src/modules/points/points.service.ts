@@ -2,52 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
-
-// ... (Existing Interfaces)
-export interface BoundingBox2D {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  label: string;
-  confidence: number;
-}
-
-export interface BoundingBox3D {
-  x: number;
-  y: number;
-  z: number;
-  w: number;
-  l: number;
-  h: number;
-  yaw: number;
-  label: string;
-  id: number;
-}
-
-export interface EgoState {
-  speed: number;
-  heading: number;
-  acceleration: number; // m/s^2
-  yawRate: number;     // rad/s
-  timestamp: number;
-}
-
-export interface Voxel {
-  x: number;
-  y: number;
-  z: number;
-  size: number;
-  color: string;
-  semantic: string;
-}
-
-export interface SearchResult {
-  frameId: number;
-  score: number;
-  description: string;
-  thumbnail?: string;
-}
+import { BoundingBox3D, EgoState, BoundingBox2D, Voxel, SearchResult } from '../common/types';
 
 @Injectable()
 export class PointsService implements OnModuleInit {
