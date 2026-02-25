@@ -111,10 +111,11 @@ export default function Dashboard() {
   const { pointSize, backgroundColor } = useControls({
     pointSize: { value: 0.1, min: 0.01, max: 1.0, step: 0.01 },
     backgroundColor: '#0a0a0a',
-    'Switch View': {
+  'Switch View': {
         options: { 'Perspective': 'perspective', 'BEV': 'bev', 'TPV (Tri-View)': 'tpv' },
         value: 'perspective',
         onChange: (v: 'perspective' | 'bev' | 'tpv') => setViewMode(v)
+    },| 'bev' | 'tpv') => setViewMode(v)
     },
     'Resources': {
         options: fileList,
