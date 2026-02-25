@@ -5,6 +5,22 @@ interface CockpitPanelProps {
     ego: EgoState | null;
 }
 
+interface StatItemProps {
+    label: string;
+    value: string;
+    unit?: string;
+    color?: string;
+}
+
+const StatItem = ({ label, value, unit, color = 'white' }: StatItemProps) => (
+    <Box sx={{ textAlign: 'center' }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>{label}</Typography>
+        <Typography variant="h5" sx={{ color, fontFamily: 'monospace', fontWeight: 'bold' }}>
+            {value} {unit && <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>{unit}</Typography>}
+        </Typography>
+    </Box>
+);
+
 export function CockpitPanel({ ego }: CockpitPanelProps) {
     if (!ego) return null;
 
@@ -18,15 +34,6 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
     const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const dirIdx = Math.round(deg / 45) % 8;
     const direction = dirs[dirIdx];
-
-    const StatItem = ({ label, value, unit, color = 'white' }: { label: string, value: string, unit?: string, color?: string }) => (
-        <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>{label}</Typography>
-            <Typography variant="h5" sx={{ color, fontFamily: 'monospace', fontWeight: 'bold' }}>
-                {value} {unit && <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>{unit}</Typography>}
-            </Typography>
-        </Box>
-    );
 
     return (
         <Paper 
