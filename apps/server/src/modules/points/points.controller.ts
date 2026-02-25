@@ -56,6 +56,16 @@ export class PointsController {
     return scene;
   }
 
+  @Get('search')
+  async searchObjects(
+    @Query('query') query: string,
+    @Query('file') file: string,
+    @Query('frame') frame: string,
+  ) {
+    const frameIdx = parseInt(frame || '0', 10);
+    return this.pointsService.searchObjects(query, file, frameIdx);
+  }
+
   @Get('drive/metadata')
   async getDriveMetadata(@Query('file') file: string) {
     return this.pointsService.getDriveMetadata(file);

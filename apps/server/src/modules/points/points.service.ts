@@ -229,6 +229,25 @@ export class PointsService implements OnModuleInit {
     return frames;
   }
 
+  async searchObjects(query: string, drive: string, frame: number) {
+    try {
+      if (drive) await this.ensureDriveLoaded(drive);
+      const effectiveFrame = this.getEffectiveFrame(drive, frame);
+
+      const response = await axios.post(`${this.ALGO_SERVICE_URL}/search`, {
+        query,
+        file: this.currentDrive,
+        frame: effectiveFrame,
+        camera: 'image_02',
+      });
+
+      return response.data;
+    } catch (e) {
+      console.error('Search failed:', e.message);
+      return { results: [] };
+    }
+  }
+
   async getInferenceObjects(
     frameIndex: number,
     drive?: string,

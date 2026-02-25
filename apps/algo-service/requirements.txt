@@ -2,3 +2,7 @@ fastapi
 uvicorn
 numpy
 pydantic
+torch
+transformers
+pillow
+requests
