@@ -22,15 +22,6 @@ export class PointsController {
     res.send(buffer);
   }
 
-  @Get('occupancy')
-  async getOccupancy(
-    @Query('frame') frame: string,
-    @Query('file') file: string,
-  ) {
-    const frameIdx = parseInt(frame || '0', 10);
-    return this.pointsService.getOccupancyData(frameIdx, file);
-  }
-
   @Get('scene')
   async getSceneData(
     @Query('frame') frame: string,

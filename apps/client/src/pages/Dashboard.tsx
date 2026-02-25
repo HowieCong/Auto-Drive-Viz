@@ -17,7 +17,6 @@ import type { EgoState, BoundingBox3D } from '../types';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
-  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy' | 'model'>('occupancy'); 
   
   const [fileList, setFileList] = useState<string[]>(['2011_09_26_drive_0001_sync']);
   const [selectedFile, setSelectedFile] = useState<string>('2011_09_26_drive_0001_sync');
@@ -94,7 +93,7 @@ export default function Dashboard() {
   const { pointSize, backgroundColor } = useControls({
     pointSize: { value: 0.1, min: 0.01, max: 1.0, step: 0.01 },
     backgroundColor: '#0a0a0a',
-    'Switch View': {
+    'View': {
         options: { 'Perspective': 'perspective', 'BEV': 'bev', 'TPV (Tri-View)': 'tpv' },
         value: 'perspective',
         onChange: (v: 'perspective' | 'bev' | 'tpv') => setViewMode(v)
@@ -103,13 +102,6 @@ export default function Dashboard() {
         options: fileList,
         value: selectedFile,
         onChange: (v: string) => setSelectedFile(v)
-    },
-    'Perception Source': {
-        options: { 
-            'LiDAR (Point Cloud)': 'lidar'
-        },
-        value: 'lidar',
-        onChange: (v: 'lidar' | 'occupancy') => setPerceptionMode(v)
     },
   }, [fileList]); // Re-render controls when fileList changes
 
@@ -179,18 +171,6 @@ export default function Dashboard() {
                             borderColor: '#444', 
                             bgcolor: '#222',
                             '& .MuiChip-label': { color: 'primary.main', fontWeight: 'bold' }
-                        }} 
-                    />
-                    <Chip 
-                        label={`Source: ${perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}`} 
-                        variant="outlined" 
-                        sx={{ 
-                            borderColor: '#444', 
-                            bgcolor: '#222',
-                            '& .MuiChip-label': { 
-                                color: perceptionMode === 'occupancy' ? 'secondary.main' : 'success.main', 
-                                fontWeight: 'bold' 
-                            }
                         }} 
                     />
                 </Box>

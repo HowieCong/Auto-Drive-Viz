@@ -6,7 +6,6 @@ import {
   BoundingBox3D,
   EgoState,
   BoundingBox2D,
-  Voxel,
 } from '../../common/types';
 
 @Injectable()
@@ -516,69 +515,6 @@ export class PointsService implements OnModuleInit {
     } catch {
       throw new Error(`Image not found for frame ${frameIndex}`);
     }
-  }
-
-  async getOccupancyData(
-    frameIndex: number = 0,
-    drive?: string,
-  ): Promise<Voxel[]> {
-    try {
-      if (drive) await this.ensureDriveLoaded(drive);
-      const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);
-      const lidarBuffer = this.getRealLidar(effectiveFrame);
-      return this.generateVoxelsFromLidar(lidarBuffer);
-    } catch (e) {
-      console.warn('Failed to generate occupancy:', e.message);
-      return [];
-    }
-  }
-
-  private generateVoxelsFromLidar(buffer: Buffer): Voxel[] {
-    const voxels: Map<string, Voxel> = new Map();
-    const voxelSize = 0.5; // 0.5m resolution
-
-    // Float32Array: x, y, z, intensity
-    const points = new Float32Array(
-      buffer.buffer,
-      buffer.byteOffset,
-      buffer.byteLength / 4,
-    );
-
-    for (let i = 0; i < points.length; i += 4) {
-      const x = points[i];
-      const y = points[i + 1];
-      const z = points[i + 2];
-      // const intensity = points[i + 3];
-
-      // Filter range (e.g. 100m)
-      if (Math.abs(x) > 50 || Math.abs(y) > 50) continue;
-
-      // Grid Index
-      const ix = Math.floor(x / voxelSize);
-      const iy = Math.floor(y / voxelSize);
-      const iz = Math.floor(z / voxelSize);
-      const key = `${ix},${iy},${iz}`;
-
-      if (!voxels.has(key)) {
-        voxels.set(key, {
-          x: ix * voxelSize + voxelSize / 2,
-          y: iy * voxelSize + voxelSize / 2,
-          z: iz * voxelSize + voxelSize / 2,
-          size: voxelSize,
-          color: this.getHeightColor(z),
-          semantic: 'Occupied',
-        });
-      }
-    }
-    return Array.from(voxels.values());
-  }
-
-  private getHeightColor(z: number): string {
-    // Simple height map
-    if (z < -1.5) return '#444444'; // Road
-    if (z < 0) return '#00ff00'; // Low obstacles
-    if (z < 1.5) return '#ffff00'; // Mid
-    return '#ff0000'; // High
   }
 
   getFiles(): string[] {
