@@ -11,7 +11,7 @@ import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
 
-import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider, IconButton, Paper } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -58,34 +58,40 @@ export default function Dashboard() {
   useEffect(() => {
       if (import.meta.env.VITE_USE_STATIC_DATA === 'true') return;
       
-      // Clear previous data
-      setSceneMetadata([]);
-      
-      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/drive/metadata?file=${selectedFile}`)
-        .then(res => res.json())
-        .then(data => {
+      const fetchData = async () => {
+          try {
+            // Clear previous data
+            setSceneMetadata([]);
+            
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/drive/metadata?file=${selectedFile}`);
+            const data = await res.json();
             if (Array.isArray(data)) {
                 setSceneMetadata(data);
             }
-        })
-        .catch(console.error);
+          } catch (error) {
+              console.error(error);
+          }
+      };
+      
+      fetchData();
   }, [selectedFile]);
 
   // Sync State from Metadata (No more polling for scene data)
   useEffect(() => {
-      if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
-          const frameData = sceneMetadata[currentFrame];
-          setObjects3D(frameData.objects);
-          setEgoState(frameData.ego);
-      } else if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
-        pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
-            setEgoState(data.ego);
-            setObjects3D(data.objects);
-        });
-      } else {
-          // Fallback if metadata not loaded yet (optional, or show loading)
-          // We can skip individual fetch if we assume metadata loads fast enough
-      }
+      const updateState = () => {
+        if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
+            const frameData = sceneMetadata[currentFrame];
+            setObjects3D(frameData.objects);
+            setEgoState(frameData.ego);
+        } else if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+            pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
+                setEgoState(data.ego);
+                setObjects3D(data.objects);
+            });
+        }
+      };
+      
+      updateState();
   }, [currentFrame, sceneMetadata]);
 
   // Animation Loop

@@ -2,6 +2,8 @@ import { VideoPlayer } from './VideoPlayer';
 import { VideoContainer } from './VideoContainer';
 import type { BoundingBox2D } from '../types';
 import { useState, useEffect } from 'react';
+import { Box } from '@mui/material';
+import { pointsService } from '../apis/PointsService';
 
 interface CameraWallProps {
   frame: number;
@@ -15,8 +17,6 @@ const CAMERAS = [
   { id: 'image_00', label: 'FRONT (Gray Left)' },
   { id: 'image_01', label: 'FRONT (Gray Right)' },
 ];
-
-import { pointsService } from '../apis/PointsService';
 
 export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
   const [boxesMap, setBoxesMap] = useState<Record<string, BoundingBox2D[]>>({});
@@ -52,16 +52,14 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        overflowY: 'auto',
-        gap: '2px',
-        background: '#000',
-      }}
-    >
+    <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100%', 
+        overflowY: 'auto', 
+        gap: 0.5,
+        bgcolor: 'black' 
+    }}>
       {CAMERAS.map((cam) => (
         <VideoContainer
           key={cam.id}
@@ -79,6 +77,6 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
           />
         </VideoContainer>
       ))}
-    </div>
+    </Box>
   );
 }
