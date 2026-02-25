@@ -32,7 +32,32 @@ export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
 
   useEffect(() => {
     if (!url || !workerRef.current) return;
-    workerRef.current.postMessage({ url });
+    
+    // Request current frame
+    workerRef.current.postMessage({ url, prefetch: false });
+
+    // Prefetch next 5 frames
+    // URL format: .../sample?frame=0&file=...
+    // We need to parse URL to increment frame. 
+    // This is a bit hacky inside the component, but keeps logic self-contained.
+    try {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+        const currentFrame = parseInt(params.get('frame') || '0');
+        const file = params.get('file');
+        
+        if (file) {
+            for (let i = 1; i <= 5; i++) {
+                const nextFrame = (currentFrame + i) % 20; // Assuming 20 frames loop
+                params.set('frame', nextFrame.toString());
+                const nextUrl = `${urlObj.origin}${urlObj.pathname}?${params.toString()}`;
+                workerRef.current.postMessage({ url: nextUrl, prefetch: true });
+            }
+        }
+    } catch (e) {
+        // ignore url parsing errors
+    }
+
   }, [url]);
 
   const geometry = useMemo(() => {

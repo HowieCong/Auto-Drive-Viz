@@ -1,7 +1,27 @@
+// Cache to store processed buffers
+const cache = new Map<string, { positions: ArrayBuffer, colors: ArrayBuffer }>();
+
 // Worker for fetching and parsing point cloud data
 self.onmessage = async (e) => {
-    const { url } = e.data;
+    const { url, prefetch } = e.data;
     if (!url) return;
+
+    // If result is cached, return immediately (unless it's a prefetch request, then we just ensure it's in cache)
+    if (cache.has(url)) {
+        if (!prefetch) {
+            const cached = cache.get(url)!;
+            // We must copy buffers because Transferable objects detach the original
+            // Or we can just re-send? Actually, if we transfer, cache loses it.
+            // So we cannot use Transferable if we want to cache in Worker RAM.
+            // We have to copy.
+            self.postMessage({ 
+                positions: cached.positions.slice(0), 
+                colors: cached.colors.slice(0),
+                url 
+            });
+        }
+        return;
+    }
 
     try {
         const res = await fetch(url);
@@ -57,11 +77,26 @@ self.onmessage = async (e) => {
             colArray[idx + 2] = b;
         }
 
-        // Transfer buffers to main thread to avoid copying
-        self.postMessage({ 
-            positions: posArray.buffer, 
-            colors: colArray.buffer 
-        }, [posArray.buffer, colArray.buffer]);
+        // Cache the result (keep as ArrayBuffer)
+        // We clone it for cache because we might transfer one copy
+        // Actually, Float32Array.buffer returns the underlying buffer.
+        // Let's store copies in cache.
+        const posBuffer = posArray.buffer;
+        const colBuffer = colArray.buffer;
+        
+        cache.set(url, { 
+            positions: posBuffer.slice(0), 
+            colors: colBuffer.slice(0) 
+        });
+
+        // If not prefetch, send back
+        if (!prefetch) {
+            self.postMessage({ 
+                positions: posBuffer, 
+                colors: colBuffer,
+                url
+            }, [posBuffer, colBuffer]);
+        }
 
     } catch (err) {
         // console.error(err);

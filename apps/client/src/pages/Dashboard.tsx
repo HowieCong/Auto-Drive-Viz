@@ -25,6 +25,7 @@ export default function Dashboard() {
   // Data
   const [objects3D, setObjects3D] = useState<BoundingBox3D[]>([]);
   const [egoState, setEgoState] = useState<EgoState | null>(null);
+  const [sceneMetadata, setSceneMetadata] = useState<any[]>([]); // Cache all frames
   // const [voxels, setVoxels] = useState<Voxel[]>([]);
 
   // Init
@@ -47,35 +48,40 @@ export default function Dashboard() {
       })
       .catch(console.error);
   }, []);
-// ...
-  // Poll Data
+
+  // Fetch Metadata Once when File Changes
   useEffect(() => {
-    // Throttling or debouncing could be added here if frame updates are too fast
-    if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+      if (import.meta.env.VITE_USE_STATIC_DATA === 'true') return;
+      
+      // Clear previous data
+      setSceneMetadata([]);
+      
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/drive/metadata?file=${selectedFile}`)
+        .then(res => res.json())
+        .then(data => {
+            if (Array.isArray(data)) {
+                setSceneMetadata(data);
+            }
+        })
+        .catch(console.error);
+  }, [selectedFile]);
+
+  // Sync State from Metadata (No more polling for scene data)
+  useEffect(() => {
+      if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
+          const frameData = sceneMetadata[currentFrame];
+          setObjects3D(frameData.objects);
+          setEgoState(frameData.ego);
+      } else if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
         pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
             setEgoState(data.ego);
             setObjects3D(data.objects);
         });
-        return;
-    }
-
-    // AbortController for cleaning up pending requests
-    const controller = new AbortController();
-
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/scene?frame=${currentFrame}&file=${selectedFile}`, {
-        signal: controller.signal
-    })
-        .then(res => res.json())
-        .then(data => {
-            setObjects3D(data.objects);
-            setEgoState(data.ego);
-        })
-        .catch(err => {
-            if (err.name !== 'AbortError') console.error(err);
-        });
-
-    return () => controller.abort();
-  }, [currentFrame, perceptionMode, selectedFile]);
+      } else {
+          // Fallback if metadata not loaded yet (optional, or show loading)
+          // We can skip individual fetch if we assume metadata loads fast enough
+      }
+  }, [currentFrame, sceneMetadata]);
 
   // Animation Loop
   useEffect(() => {

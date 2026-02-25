@@ -201,6 +201,24 @@ export class PointsService implements OnModuleInit {
     }
   }
 
+  async getDriveMetadata(drive: string): Promise<any[]> {
+      await this.ensureDriveLoaded(drive);
+      const count = this.getKittiFrameCount();
+      const frames = [];
+      
+      // Batch collect all frames
+      for(let i=0; i<count; i++) {
+          const effectiveFrame = this.getEffectiveFrame(drive, i);
+          const { objects, ego } = this.getRealSceneObjects(effectiveFrame);
+          frames.push({
+              frame: i,
+              objects,
+              ego
+          });
+      }
+      return frames;
+  }
+
   // --- Real Data Getters ---
 
   getRealImage(frame: number, camera: string = 'image_02'): Buffer {

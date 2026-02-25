@@ -40,6 +40,11 @@ export class PointsController {
     return this.pointsService.getSceneObjects(frameIdx, file);
   }
 
+  @Get('drive/metadata')
+  async getDriveMetadata(@Query('file') file: string) {
+      return this.pointsService.getDriveMetadata(file);
+  }
+
   @Get('boxes')
   async get2DBoxes(
     @Query('frame') frame: string,
