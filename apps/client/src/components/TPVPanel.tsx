@@ -11,40 +11,45 @@ interface TPVPanelProps {
   pointSize?: number;
 }
 
+interface ViewContainerProps {
+    label: string;
+    children: React.ReactNode;
+}
+
+const ViewContainer = ({ label, children }: ViewContainerProps) => (
+    <Paper sx={{ 
+        flex: 1, 
+        position: 'relative', 
+        overflow: 'hidden', 
+        border: 1, 
+        borderColor: 'divider', 
+        bgcolor: 'black',
+        borderRadius: 0 
+    }}>
+        <Typography 
+          variant="caption" 
+          sx={{ 
+              position: 'absolute', 
+              top: 5, 
+              left: 5, 
+              zIndex: 10, 
+              bgcolor: 'rgba(0,0,0,0.6)', 
+              px: 1, 
+              borderRadius: 1,
+              color: 'primary.main',
+              fontWeight: 'bold'
+          }}
+        >
+            {label}
+        </Typography>
+        {children}
+    </Paper>
+);
+
 export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) {
   // Zoom level for orthographic cameras
   const zoomXY = 8;
   const zoomSide = 12; // Side/Front views usually need more zoom as Z range is small
-
-  const ViewContainer = ({ label, children }: { label: string, children: React.ReactNode }) => (
-      <Paper sx={{ 
-          flex: 1, 
-          position: 'relative', 
-          overflow: 'hidden', 
-          border: 1, 
-          borderColor: 'divider', 
-          bgcolor: 'black',
-          borderRadius: 0 
-      }}>
-          <Typography 
-            variant="caption" 
-            sx={{ 
-                position: 'absolute', 
-                top: 5, 
-                left: 5, 
-                zIndex: 10, 
-                bgcolor: 'rgba(0,0,0,0.6)', 
-                px: 1, 
-                borderRadius: 1,
-                color: 'primary.main',
-                fontWeight: 'bold'
-            }}
-          >
-              {label}
-          </Typography>
-          {children}
-      </Paper>
-  );
 
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 0.5, bgcolor: 'background.default' }}>
