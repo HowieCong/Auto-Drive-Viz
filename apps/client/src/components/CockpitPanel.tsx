@@ -1,7 +1,7 @@
 import type { EgoState } from '../types';
 import { Box, Typography, Paper } from '@mui/material';
-
-import { usePerformanceMetrics } from './PerformanceMonitor';
+import { usePerformanceHistory } from './PerformanceMonitor';
+import { Sparklines, SparklinesLine, SparklinesSpots } from 'react-sparklines';
 
 interface CockpitPanelProps {
     ego: EgoState | null;
@@ -12,22 +12,37 @@ interface StatItemProps {
     value: string;
     unit?: string;
     color?: string;
+    history?: number[];
+    min?: number;
+    max?: number;
 }
 
-const StatItem = ({ label, value, unit, color = 'white' }: StatItemProps) => (
-    <Box sx={{ textAlign: 'center' }}>
+const StatItem = ({ label, value, unit, color = 'white', history, min, max }: StatItemProps) => (
+    <Box sx={{ textAlign: 'center', minWidth: 80 }}>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>{label}</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 0.5 }}>
+        
+        {/* Value Display */}
+        <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 0.5, mb: history ? 0.5 : 0 }}>
             <Typography variant="h5" sx={{ color, fontFamily: 'monospace', fontWeight: 'bold' }}>
                 {value}
             </Typography>
             {unit && <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>{unit}</Typography>}
         </Box>
+
+        {/* Sparkline Chart */}
+        {history && history.length > 0 && (
+            <Box sx={{ width: '100%', height: 20, opacity: 0.7 }}>
+                <Sparklines data={history} min={min} max={max} width={80} height={20} margin={2}>
+                    <SparklinesLine color={color === 'white' ? '#aaaaaa' : color} style={{ fill: "none", strokeWidth: 2 }} />
+                    <SparklinesSpots size={2} style={{ fill: color === 'white' ? '#ffffff' : color }} />
+                </Sparklines>
+            </Box>
+        )}
     </Box>
 );
 
 export function CockpitPanel({ ego }: CockpitPanelProps) {
-    const { fps, frameTime } = usePerformanceMetrics();
+    const { fps, frameTime, history } = usePerformanceHistory();
 
     if (!ego) return null;
 
@@ -57,10 +72,10 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
                 px: 4,
                 py: 2,
                 display: 'flex',
-                gap: 5,
+                gap: 4,
                 zIndex: 100,
                 backdropFilter: 'blur(8px)',
-                minWidth: 400,
+                minWidth: 500,
                 justifyContent: 'space-around'
             }}
         >
@@ -68,8 +83,27 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
             <StatItem label="ACCEL" value={accel} unit="m/s²" color={Number(accel) > 0 ? 'secondary.main' : 'success.main'} />
             <StatItem label="YAW RATE" value={yawRateDeg} unit="°/s" />
             <StatItem label="HEADING" value={direction} unit={`(${deg.toFixed(0)}°)`} color="text.secondary" />
-            <StatItem label="FPS" value={fps.toString()} color="warning.main" />
-            <StatItem label="FRAME" value={frameTime.toString()} unit="ms" color="warning.main" />
+            
+            {/* Divider */}
+            <Box sx={{ width: 1, bgcolor: 'divider', mx: 1 }} />
+
+            <StatItem 
+                label="FPS" 
+                value={fps.toString()} 
+                color="warning.main" 
+                history={history.fps} 
+                min={0} 
+                max={70} 
+            />
+            <StatItem 
+                label="FRAME" 
+                value={frameTime.toString()} 
+                unit="ms" 
+                color="warning.main" 
+                history={history.frameTime} 
+                min={0} 
+                max={30} 
+            />
         </Paper>
     );
 }
