@@ -119,7 +119,10 @@ export default function Dashboard() {
         
         {/* HEADER */}
         <div style={{ height: '60px', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '20px', background: '#1a1a1a' }}>
-            <h2 style={{ margin: 0, color: '#00ffff', fontStyle: 'italic' }}>AutoDrive<span style={{color:'white'}}>Viz</span></h2>
+            <h2 style={{ margin: 0, color: '#00ffff', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '24px' }}>🚗</span>
+                <span>Auto-Drive-Viz</span>
+            </h2>
             
             <div style={{ height: '30px', borderLeft: '1px solid #444' }} />
             
