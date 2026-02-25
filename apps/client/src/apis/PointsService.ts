@@ -68,9 +68,21 @@ export class PointsService {
     return { objects, ego };
   }
 
+  async getSampleData(frame: number): Promise<string> {
+    await this.ensureLoaded();
+    const name = frame.toString().padStart(10, '0') + '.bin';
+    const url = `${this.kittiRoot}/${this.currentDrive}/velodyne_points/data/${name}`;
+    return url;
+  }
+
+  getImageUrl(frame: number, camera: string): string {
+    const name = frame.toString().padStart(10, '0') + '.png';
+    return `${this.kittiRoot}/${this.currentDrive}/${camera}/data/${name}`;
+  }
+
   async get2DBoxes(frame: number, camera: string): Promise<BoundingBox2D[]> {
-      await this.ensureLoaded();
-      return this.getReal2DBoxes(frame, camera);
+    await this.ensureLoaded();
+    return this.getReal2DBoxes(frame, camera);
   }
 
   private async getRealEgoState(frame: number): Promise<EgoState> {
