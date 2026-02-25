@@ -33,18 +33,25 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
   };
 
   // Zoom level for orthographic cameras
-  const zoom = 8;
+  const zoomXY = 8;
+  const zoomSide = 12; // Side/Front views usually need more zoom as Z range is small
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
       
-      {/* Top Row: XY (BEV) */}
+      {/* Top Row: XY (BEV) - Top View */}
       <div style={viewStyle}>
-        <div style={labelStyle}>TPV-XY (Top)</div>
+        <div style={labelStyle}>TPV-XY (Top View)</div>
         <Canvas>
-          <OrthographicCamera makeDefault position={[0, 0, 50]} zoom={zoom} up={[0, 1, 0]} near={-100} far={100} />
+          {/* Looking down from +Z to origin. X is right, Y is up (in screen). 
+              KITTI: X forward, Y left. 
+              To match standard map: X should be UP, Y should be LEFT? 
+              Let's stick to standard Three.js convention first: Y is up.
+              If Camera at (0,0,50), looking at (0,0,0), Up (0,1,0).
+              Then Screen X = World X, Screen Y = World Y.
+          */}
+          <OrthographicCamera makeDefault position={[0, 0, 50]} zoom={zoomXY} near={-100} far={100} up={[0, 1, 0]} />
           <ambientLight intensity={0.5} />
-          {/* Grid on XY plane */}
           <gridHelper args={[100, 10, 0x444444, 0x222222]} rotation={[Math.PI/2, 0, 0]} />
           
           <PointCloudViewer size={pointSize} url={url} />
@@ -54,20 +61,29 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
         </Canvas>
       </div>
 
-      {/* Bottom Row: XZ (Front) and YZ (Side) */}
+      {/* Bottom Row: XZ (Side) and YZ (Front) */}
       <div style={{ flex: 1, display: 'flex', gap: '2px' }}>
         
-        {/* XZ Plane (Side View - Looking from Y) */}
-        {/* KITTI: X forward, Y left, Z up. */}
-        {/* Looking from Y axis (Left side) towards vehicle */}
+        {/* XZ Plane - Side View (Looking from -Y) 
+            KITTI: X forward, Z up.
+            We want X horizontal, Z vertical.
+            Camera at (0, -50, 0), looking at (0,0,0).
+            Up vector should be (0,0,1) so Z maps to Screen Y.
+        */}
         <div style={viewStyle}>
-            <div style={labelStyle}>TPV-XZ (Side)</div>
+            <div style={labelStyle}>TPV-XZ (Side View)</div>
             <Canvas>
-                {/* Position on Y axis, looking at origin. Up is Z. */}
-                <OrthographicCamera makeDefault position={[0, -50, 0]} zoom={zoom} up={[0, 0, 1]} near={-100} far={100} />
+                <OrthographicCamera 
+                    makeDefault 
+                    position={[0, -50, 0]} 
+                    zoom={zoomSide} 
+                    near={-100} 
+                    far={100} 
+                    up={[0, 0, 1]} 
+                    onUpdate={c => c.lookAt(0, 0, 0)}
+                />
                 <ambientLight intensity={0.5} />
-                {/* Grid on XZ plane? No, GridHelper is usually XZ plane by default. We need to rotate it to match view? */}
-                {/* Default GridHelper is on XZ plane (y=0). */}
+                {/* Grid on XZ plane */}
                 <gridHelper args={[100, 10, 0x444444, 0x222222]} />
                 
                 <PointCloudViewer size={pointSize} url={url} />
@@ -77,13 +93,24 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
             </Canvas>
         </div>
 
-        {/* YZ Plane (Front View - Looking from X) */}
-        {/* Looking from X axis (Front) towards vehicle */}
+        {/* YZ Plane - Front View (Looking from -X or +X) 
+            KITTI: Y left, Z up.
+            We want Y horizontal, Z vertical.
+            Camera at (50, 0, 0) looking at (0,0,0).
+            Up vector (0,0,1).
+        */}
         <div style={viewStyle}>
-            <div style={labelStyle}>TPV-YZ (Front)</div>
+            <div style={labelStyle}>TPV-YZ (Front View)</div>
             <Canvas>
-                {/* Position on X axis, looking at origin. Up is Z. */}
-                <OrthographicCamera makeDefault position={[50, 0, 0]} zoom={zoom} up={[0, 0, 1]} near={-100} far={100} />
+                <OrthographicCamera 
+                    makeDefault 
+                    position={[50, 0, 0]} 
+                    zoom={zoomSide} 
+                    near={-100} 
+                    far={100} 
+                    up={[0, 0, 1]}
+                    onUpdate={c => c.lookAt(0, 0, 0)}
+                />
                 <ambientLight intensity={0.5} />
                 {/* Grid on YZ plane */}
                 <gridHelper args={[100, 10, 0x444444, 0x222222]} rotation={[0, 0, Math.PI/2]} />
