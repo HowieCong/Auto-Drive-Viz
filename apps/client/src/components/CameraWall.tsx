@@ -52,16 +52,7 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        overflowY: 'auto',
-        gap: '2px',
-        background: '#000',
-      }}
-    >
+    <div className="flex flex-col h-full overflow-y-auto gap-0.5 bg-black">
       {CAMERAS.map((cam) => (
         <VideoContainer
           key={cam.id}

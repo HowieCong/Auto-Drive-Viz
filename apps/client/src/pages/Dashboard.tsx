@@ -124,46 +124,44 @@ export default function Dashboard() {
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-background text-gray-200 overflow-hidden">
+    <div className="w-screen h-screen flex flex-col bg-[#111] text-[#eee]">
         
         {/* HEADER */}
-        <div className="h-16 border-b border-border flex items-center px-5 gap-5 bg-surface">
-            <h2 className="m-0 text-primary italic flex items-center gap-2.5">
+        <div className="h-[60px] border-b border-[#333] flex items-center px-5 gap-5 bg-[#1a1a1a]">
+            <h2 className="m-0 text-[#00ffff] italic flex items-center gap-2.5 font-bold text-xl">
                 <span className="text-2xl">🚗</span>
-                <span className="font-bold tracking-wide">Auto-Drive-Viz</span>
+                <span>Auto-Drive-Viz</span>
             </h2>
             
-            <div className="h-8 border-l border-gray-600" />
+            <div className="h-[30px] border-l border-[#444]" />
             
             <button 
                 onClick={() => setIsPlaying(!isPlaying)}
-                className={`border-none rounded px-5 py-2 cursor-pointer font-bold transition-colors ${
-                    isPlaying ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-black'
-                }`}
+                className={`border-none rounded px-5 py-2 cursor-pointer font-bold ${isPlaying ? 'bg-[#ff4444]' : 'bg-[#44ff44]'}`}
             >
                 {isPlaying ? 'PAUSE' : 'PLAY'}
             </button>
 
-            <div className="flex-1 flex items-center gap-3">
-                <span className="text-sm font-mono text-gray-400">FRAME {currentFrame.toString().padStart(2, '0')}</span>
+            <div className="flex-1 flex items-center gap-2.5">
+                <span>Frame: {currentFrame}</span>
                 <input 
                     type="range" min={0} max={19} value={currentFrame} 
                     onChange={e => setCurrentFrame(parseInt(e.target.value))} 
-                    className="flex-1 accent-primary h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    className="flex-1 accent-[#00ffff]"
                 />
             </div>
 
-            <div className="h-8 border-l border-gray-600" />
+            <div className="h-[30px] border-l border-[#444]" />
 
-            <div className="flex gap-3 items-center">
-                <div className="bg-gray-800 px-3 py-1 rounded border border-gray-700 text-xs flex items-center">
-                    <span className="text-gray-400 mr-2 font-medium">MODE</span>
-                    <span className="text-primary font-bold">{viewMode.toUpperCase()}</span>
+            <div className="flex gap-2.5 items-center">
+                <div className="bg-[#222] px-2.5 py-1 rounded border border-[#444] text-xs">
+                    <span className="text-[#ccc] mr-1.5">Mode:</span>
+                    <span className="text-[#00ffff] font-bold">{viewMode.toUpperCase()}</span>
                 </div>
-                <div className="bg-gray-800 px-3 py-1 rounded border border-gray-700 text-xs flex items-center">
-                    <span className="text-gray-400 mr-2 font-medium">SOURCE</span>
-                    <span className={`font-bold ${perceptionMode === 'occupancy' ? 'text-accent' : 'text-secondary'}`}>
-                        {perceptionMode === 'occupancy' ? 'VISION' : 'LIDAR'}
+                <div className="bg-[#222] px-2.5 py-1 rounded border border-[#444] text-xs">
+                    <span className="text-[#ccc] mr-1.5">Source:</span>
+                    <span className={`font-bold ${perceptionMode === 'occupancy' ? 'text-[#ff00ff]' : 'text-[#00ff00'}`}>
+                        {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}
                     </span>
                 </div>
             </div>
@@ -173,7 +171,7 @@ export default function Dashboard() {
         <div className="flex-1 flex overflow-hidden">
             
             {/* LEFT: 3D Visualization */}
-            <div className="flex-[3] relative border-r border-border">
+            <div className="flex-[3] relative border-r border-[#333]">
                 
                 <CockpitPanel ego={egoState} />
 
@@ -213,13 +211,13 @@ export default function Dashboard() {
             </div>
 
             {/* RIGHT: Analysis */}
-            <div className="flex-1 min-w-[400px] flex flex-col bg-surface border-l border-border">
-                <div className="flex-1 bg-black border-b border-border flex flex-col">
-                    <div className="px-3 py-2 text-xs text-gray-500 border-b border-gray-800 flex justify-between items-center font-bold tracking-wider">
+            <div className="flex-1 min-w-[400px] flex flex-col bg-[#1a1a1a]">
+                <div className="flex-1 bg-black border-b border-[#333] flex flex-col">
+                    <div className="px-2.5 py-1.5 text-xs text-[#888] border-b border-[#222] flex justify-between">
                         <span>SURROUND CAMERAS (4/6)</span>
-                        <span className="text-secondary flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> LIVE</span>
+                        <span className="text-[#00ff00]">● LIVE</span>
                     </div>
-                    <div className="flex-1 relative">
+                    <div className="flex-1">
                         <CameraWall 
                             frame={currentFrame} 
                             file={selectedFile} 

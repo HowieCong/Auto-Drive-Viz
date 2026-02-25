@@ -11,6 +11,7 @@ interface TPVPanelProps {
 }
 
 export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) {
+
   // Zoom level for orthographic cameras
   const zoomXY = 8;
   const zoomSide = 12; // Side/Front views usually need more zoom as Z range is small
@@ -19,8 +20,8 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
     <div className="w-full h-full flex flex-col gap-0.5">
       
       {/* Top Row: XY (BEV) - Top View */}
-      <div className="flex-1 bg-black border border-border relative overflow-hidden">
-        <div className="absolute top-1 left-1 text-primary text-xs font-bold z-10 bg-black/50 px-1 py-0.5 rounded">TPV-XY (Top View)</div>
+      <div className="flex-1 bg-black border border-[#333] relative overflow-hidden">
+        <div className="absolute top-1 left-1 text-[#00ffff] text-xs font-bold z-10 bg-black/50 px-1">TPV-XY (Top View)</div>
         <Canvas>
           {/* Looking down from +Z to origin. X is right, Y is up (in screen). 
               KITTI: X forward, Y left. 
@@ -49,8 +50,8 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
             Camera at (0, -50, 0), looking at (0,0,0).
             Up vector should be (0,0,1) so Z maps to Screen Y.
         */}
-        <div className="flex-1 bg-black border border-border relative overflow-hidden">
-            <div className="absolute top-1 left-1 text-primary text-xs font-bold z-10 bg-black/50 px-1 py-0.5 rounded">TPV-XZ (Side View)</div>
+        <div className="flex-1 bg-black border border-[#333] relative overflow-hidden">
+            <div className="absolute top-1 left-1 text-[#00ffff] text-xs font-bold z-10 bg-black/50 px-1">TPV-XZ (Side View)</div>
             <Canvas>
                 <OrthographicCamera 
                     makeDefault 
@@ -78,8 +79,8 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
             Camera at (50, 0, 0) looking at (0,0,0).
             Up vector (0,0,1).
         */}
-        <div className="flex-1 bg-black border border-border relative overflow-hidden">
-            <div className="absolute top-1 left-1 text-primary text-xs font-bold z-10 bg-black/50 px-1 py-0.5 rounded">TPV-YZ (Front View)</div>
+        <div className="flex-1 bg-black border border-[#333] relative overflow-hidden">
+            <div className="absolute top-1 left-1 text-[#00ffff] text-xs font-bold z-10 bg-black/50 px-1">TPV-YZ (Front View)</div>
             <Canvas>
                 <OrthographicCamera 
                     makeDefault 
