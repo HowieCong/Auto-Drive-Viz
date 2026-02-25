@@ -6,6 +6,7 @@ import type { BoundingBox3D, EgoState, BoundingBox2D } from '../types';
 export class PointsService {
   private kittiRoot = '/data/kitti/2011_09_26';
   private currentDrive = '2011_09_26_drive_0001_sync';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private tracklets: any[] = [];
   private calibVeloToCam: number[][] = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
   private calibCamToCam: Record<string, number[][]> = {};
@@ -129,6 +130,7 @@ export class PointsService {
     return calibs;
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   private processTracklets(xml: any): any[] {
     const items = xml.boost_serialization.tracklets[0].item || [];
     const tracks: any[] = [];
@@ -157,6 +159,7 @@ export class PointsService {
     });
     return tracks;
   }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   private getReal2DBoxes(frame: number, camera: string): BoundingBox2D[] {
     const currentTracks = this.tracklets.filter((t) => t.frame === frame);

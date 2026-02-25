@@ -54,7 +54,7 @@ export function PointCloudViewer({ size = 0.1, url }: PointCloudViewerProps) {
                 workerRef.current.postMessage({ url: nextUrl, prefetch: true });
             }
         }
-    } catch (e) {
+    } catch {
         // ignore url parsing errors
     }
 

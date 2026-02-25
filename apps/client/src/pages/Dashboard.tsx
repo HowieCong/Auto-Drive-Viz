@@ -28,7 +28,7 @@ export default function Dashboard() {
   // Data
   const [objects3D, setObjects3D] = useState<BoundingBox3D[]>([]);
   const [egoState, setEgoState] = useState<EgoState | null>(null);
-  const [sceneMetadata, setSceneMetadata] = useState<any[]>([]); // Cache all frames
+  const [sceneMetadata, setSceneMetadata] = useState<{ objects: BoundingBox3D[], ego: EgoState }[]>([]); // Cache all frames
   // const [voxels, setVoxels] = useState<Voxel[]>([]);
 
   // Init

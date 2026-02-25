@@ -2,11 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
-import {
-  BoundingBox3D,
-  EgoState,
-  BoundingBox2D,
-} from '../../common/types';
+import { BoundingBox3D, EgoState, BoundingBox2D } from '../../common/types';
 
 @Injectable()
 export class PointsService implements OnModuleInit {
