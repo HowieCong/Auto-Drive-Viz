@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
-import axios from 'axios';
 import {
   BoundingBox3D,
   EgoState,
@@ -18,10 +17,6 @@ export class PointsService implements OnModuleInit {
     '../client/public/data/kitti/2011_09_26',
   );
   private currentDrive = '2011_09_26_drive_0001_sync';
-
-  // Algo Service URL
-  private readonly ALGO_SERVICE_URL =
-    process.env.ALGO_SERVICE_URL || 'http://localhost:8000';
 
   // Cache
   private tracklets: any[] = [];
@@ -48,12 +43,9 @@ export class PointsService implements OnModuleInit {
   }
 
   async ensureDriveLoaded(drive: string) {
-    // Strip virtual suffixes to get real drive name
-    const realDrive = drive.replace('_reverse', '').replace('_fast', '');
-    
-    if (this.currentDrive !== realDrive) {
-      console.log(`Switching drive from ${this.currentDrive} to ${realDrive}`);
-      this.currentDrive = realDrive;
+    if (this.currentDrive !== drive) {
+      console.log(`Switching drive from ${this.currentDrive} to ${drive}`);
+      this.currentDrive = drive;
       await this.loadKittiData();
     }
   }
@@ -230,63 +222,6 @@ export class PointsService implements OnModuleInit {
       });
     }
     return frames;
-  }
-
-  async searchObjects(query: string, drive: string, frame: number) {
-    try {
-      if (drive) await this.ensureDriveLoaded(drive);
-      const effectiveFrame = this.getEffectiveFrame(drive, frame);
-
-      // Get real objects for this frame to pass labels to Python
-      const { objects } = this.getRealSceneObjects(effectiveFrame);
-
-      // If no objects, return empty
-      if (objects.length === 0) return { results: [] };
-
-      // Prepare payload: query + list of objects (id, label)
-      // Python will compute similarity between query and each object's label
-      const object_list = objects.map((o) => ({
-        id: o.id.toString(),
-        label: o.label,
-      }));
-
-      const response = await axios.post(`${this.ALGO_SERVICE_URL}/search`, {
-        query,
-        file: this.currentDrive,
-        frame: effectiveFrame,
-        camera: 'image_02',
-        objects: object_list,
-      });
-
-      return response.data;
-    } catch (e) {
-      console.error('Search failed:', e.message);
-      return { results: [] };
-    }
-  }
-
-  async getInferenceObjects(
-    frameIndex: number,
-    drive?: string,
-  ): Promise<BoundingBox3D[]> {
-    try {
-      if (drive) await this.ensureDriveLoaded(drive);
-      const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);
-
-      // Call Python Algo Service
-      const response = await axios.post(`${this.ALGO_SERVICE_URL}/detect`, {
-        file: this.currentDrive,
-        frame: effectiveFrame,
-      });
-
-      if (response.data && response.data.objects) {
-        return response.data.objects;
-      }
-      return [];
-    } catch (e) {
-      console.error('Inference failed:', e.message);
-      return [];
-    }
   }
 
   // --- Real Data Getters ---
@@ -500,18 +435,11 @@ export class PointsService implements OnModuleInit {
   // Helper to simulate a "Different" dataset by reversing the playback for drive_0005
   // Total frames: 108 (0 to 107)
   private getEffectiveFrame(drive: string | undefined, frame: number): number {
-    const MAX_FRAME = 107;
-    
-    // Virtual Dataset: Reverse Playback
-    if (drive && drive.includes('_reverse')) {
+    // If it's the duplicated dataset (0005), reverse the frame index!
+    if (drive && drive.includes('drive_0005')) {
+      const MAX_FRAME = 107;
       return Math.max(0, MAX_FRAME - frame);
     }
-    
-    // Virtual Dataset: Fast Forward (2x)
-    if (drive && drive.includes('_fast')) {
-      return Math.min(MAX_FRAME, frame * 2);
-    }
-
     return frame;
   }
 
@@ -656,21 +584,12 @@ export class PointsService implements OnModuleInit {
   getFiles(): string[] {
     try {
       if (!fs.existsSync(this.kittiRoot)) return [];
-      const realFiles = fs
+      return fs
         .readdirSync(this.kittiRoot)
         .filter((file) =>
           fs.statSync(path.join(this.kittiRoot, file)).isDirectory(),
         )
         .filter((dir) => dir.includes('_drive_')); // Filter to only drive folders
-        
-      // Generate Virtual Datasets
-      const virtualFiles = [];
-      realFiles.forEach(file => {
-          virtualFiles.push(`${file}_reverse`);
-          virtualFiles.push(`${file}_fast`);
-      });
-      
-      return [...realFiles, ...virtualFiles];
     } catch {
       return [];
     }

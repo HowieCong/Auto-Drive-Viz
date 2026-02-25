@@ -1,8 +1,7 @@
-import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider, TextField, InputAdornment } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import SearchIcon from '@mui/icons-material/Search';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import { PointCloudViewer } from '../components/PointCloudViewer';
@@ -18,7 +17,7 @@ import type { EgoState, BoundingBox3D } from '../types';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
-  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy'>('occupancy'); 
+  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy' | 'model'>('occupancy'); 
   
   const [fileList, setFileList] = useState<string[]>(['2011_09_26_drive_0001_sync']);
   const [selectedFile, setSelectedFile] = useState<string>('2011_09_26_drive_0001_sync');
@@ -26,8 +25,6 @@ export default function Dashboard() {
   // State
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Record<string, number>>({});
   
   // Data
   const [objects3D, setObjects3D] = useState<BoundingBox3D[]>([]);
@@ -117,12 +114,11 @@ export default function Dashboard() {
   }, [fileList]); // Re-render controls when fileList changes
 
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
-  // const sceneUrl = `http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}&source=${perceptionMode === 'model' ? 'model' : 'gt'}`;
+  // const sceneUrl = `http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}`;
 
-  // Sync State (Updated logic to handle Model Inference)
+  // Sync State from Metadata (No more polling for scene data)
   useEffect(() => {
-      const updateState = async () => {
-        // Ground Truth Mode: Use Cache
+      const updateState = () => {
         if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
             const frameData = sceneMetadata[currentFrame];
             setObjects3D(frameData.objects);
@@ -136,7 +132,7 @@ export default function Dashboard() {
       };
       
       updateState();
-  }, [currentFrame, sceneMetadata, perceptionMode]);
+  }, [currentFrame, sceneMetadata]);
 
   return (
     <Box sx={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', color: 'text.primary' }}>
@@ -174,49 +170,6 @@ export default function Dashboard() {
                 </Box>
 
                 <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
-
-                <TextField
-                    variant="outlined"
-                    size="small"
-                    placeholder="Search objects (e.g. 'red car')"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            // Call Python Search API (via NestJS Proxy if we had one, but we can call Python directly for MVP or add Proxy)
-                            // Let's add Proxy in PointsController
-                            // Or just fetch Python directly if CORS allowed.
-                            // Better: Add Proxy in NestJS.
-                            
-                            console.log('Searching for:', searchQuery);
-                            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/search?query=${searchQuery}&file=${selectedFile}&frame=${currentFrame}`)
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.results) {
-                                        // Map results to id->score
-                                        const scores: Record<string, number> = {};
-                                        data.results.forEach((r: any) => scores[r.id] = r.score);
-                                        setSearchResults(scores);
-                                    }
-                                })
-                                .catch(console.error);
-                        }
-                    }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon sx={{ color: 'text.secondary' }} />
-                            </InputAdornment>
-                        ),
-                        sx: { 
-                            bgcolor: 'rgba(255,255,255,0.05)', 
-                            color: 'white',
-                            '& fieldset': { borderColor: '#444' },
-                            '&:hover fieldset': { borderColor: '#666' },
-                            width: 250
-                        }
-                    }}
-                />
 
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <Chip 
@@ -270,25 +223,10 @@ export default function Dashboard() {
 
                         {/* 3D Bounding Boxes */}
                         {objects3D.map(obj => {
-                            // Merge score from search results
-                            // Match by ID. If we use GT, we might not have IDs that match Mock Python IDs.
-                            // In real system, we would search on the same objects.
-                            // For this Demo: 
-                            // If Mode = Model, IDs match.
-                            // If Mode = GT, we don't have IDs from Python Mock.
-                            // So Search only works well in "Model Inference" mode for now?
-                            // OR we make Python Search return scores for GT objects (if we passed GT boxes to it).
-                            
-                            // Let's assume for Demo: Search works on "Model Inference" mode primarily.
-                            // But if we are in GT mode, we can't map easily unless we mock IDs.
-                            // Let's just pass the score if ID matches.
-                            
-                            const score = searchResults[obj.id];
-                            
                             return (
                                 <BoundingBox3DVisualizer 
                                     key={obj.id} 
-                                    box={{ ...obj, score }} 
+                                    box={obj} 
                                     color={obj.label === 'Car' ? '#00ff00' : obj.label === 'Pedestrian' ? '#ff0000' : '#ffff00'} 
                                 />
                             );
