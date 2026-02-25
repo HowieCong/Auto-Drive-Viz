@@ -124,54 +124,56 @@ export default function Dashboard() {
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
 
   return (
-    <div className="app-container" style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', background: '#111', color: '#eee' }}>
+    <div className="w-screen h-screen flex flex-col bg-background text-gray-200 overflow-hidden">
         
         {/* HEADER */}
-        <div style={{ height: '60px', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '20px', background: '#1a1a1a' }}>
-            <h2 style={{ margin: 0, color: '#00ffff', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '24px' }}>🚗</span>
-                <span>Auto-Drive-Viz</span>
+        <div className="h-16 border-b border-border flex items-center px-5 gap-5 bg-surface">
+            <h2 className="m-0 text-primary italic flex items-center gap-2.5">
+                <span className="text-2xl">🚗</span>
+                <span className="font-bold tracking-wide">Auto-Drive-Viz</span>
             </h2>
             
-            <div style={{ height: '30px', borderLeft: '1px solid #444' }} />
+            <div className="h-8 border-l border-gray-600" />
             
             <button 
                 onClick={() => setIsPlaying(!isPlaying)}
-                style={{ background: isPlaying ? '#ff4444' : '#44ff44', border: 'none', borderRadius: '4px', padding: '8px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                className={`border-none rounded px-5 py-2 cursor-pointer font-bold transition-colors ${
+                    isPlaying ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-black'
+                }`}
             >
                 {isPlaying ? 'PAUSE' : 'PLAY'}
             </button>
 
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>Frame: {currentFrame}</span>
+            <div className="flex-1 flex items-center gap-3">
+                <span className="text-sm font-mono text-gray-400">FRAME {currentFrame.toString().padStart(2, '0')}</span>
                 <input 
                     type="range" min={0} max={19} value={currentFrame} 
                     onChange={e => setCurrentFrame(parseInt(e.target.value))} 
-                    style={{ flex: 1, accentColor: '#00ffff' }}
+                    className="flex-1 accent-primary h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
             </div>
 
-            <div style={{ height: '30px', borderLeft: '1px solid #444' }} />
+            <div className="h-8 border-l border-gray-600" />
 
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <div style={{ background: '#222', padding: '4px 10px', borderRadius: '4px', border: '1px solid #444', fontSize: '12px' }}>
-                    <span style={{ color: '#ccc', marginRight: '5px' }}>Mode:</span>
-                    <span style={{ color: '#00ffff', fontWeight: 'bold' }}>{viewMode.toUpperCase()}</span>
+            <div className="flex gap-3 items-center">
+                <div className="bg-gray-800 px-3 py-1 rounded border border-gray-700 text-xs flex items-center">
+                    <span className="text-gray-400 mr-2 font-medium">MODE</span>
+                    <span className="text-primary font-bold">{viewMode.toUpperCase()}</span>
                 </div>
-                <div style={{ background: '#222', padding: '4px 10px', borderRadius: '4px', border: '1px solid #444', fontSize: '12px' }}>
-                    <span style={{ color: '#ccc', marginRight: '5px' }}>Source:</span>
-                    <span style={{ color: perceptionMode === 'occupancy' ? '#ff00ff' : '#00ff00', fontWeight: 'bold' }}>
-                        {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}
+                <div className="bg-gray-800 px-3 py-1 rounded border border-gray-700 text-xs flex items-center">
+                    <span className="text-gray-400 mr-2 font-medium">SOURCE</span>
+                    <span className={`font-bold ${perceptionMode === 'occupancy' ? 'text-accent' : 'text-secondary'}`}>
+                        {perceptionMode === 'occupancy' ? 'VISION' : 'LIDAR'}
                     </span>
                 </div>
             </div>
         </div>
 
         {/* MAIN LAYOUT */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div className="flex-1 flex overflow-hidden">
             
             {/* LEFT: 3D Visualization */}
-            <div style={{ flex: 3, position: 'relative', borderRight: '1px solid #333' }}>
+            <div className="flex-[3] relative border-r border-border">
                 
                 <CockpitPanel ego={egoState} />
 
@@ -211,13 +213,13 @@ export default function Dashboard() {
             </div>
 
             {/* RIGHT: Analysis */}
-            <div style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', background: '#1a1a1a' }}>
-                <div style={{ flex: 1, background: '#000', borderBottom: '1px solid #333', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ padding: '5px 10px', fontSize: '12px', color: '#888', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between' }}>
+            <div className="flex-1 min-w-[400px] flex flex-col bg-surface border-l border-border">
+                <div className="flex-1 bg-black border-b border-border flex flex-col">
+                    <div className="px-3 py-2 text-xs text-gray-500 border-b border-gray-800 flex justify-between items-center font-bold tracking-wider">
                         <span>SURROUND CAMERAS (4/6)</span>
-                        <span style={{ color: '#00ff00' }}>● LIVE</span>
+                        <span className="text-secondary flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> LIVE</span>
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div className="flex-1 relative">
                         <CameraWall 
                             frame={currentFrame} 
                             file={selectedFile} 
