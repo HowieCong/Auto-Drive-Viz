@@ -15,9 +15,12 @@ interface StatItemProps {
 const StatItem = ({ label, value, unit, color = 'white' }: StatItemProps) => (
     <Box sx={{ textAlign: 'center' }}>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>{label}</Typography>
-        <Typography variant="h5" sx={{ color, fontFamily: 'monospace', fontWeight: 'bold' }}>
-            {value} {unit && <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>{unit}</Typography>}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 0.5 }}>
+            <Typography variant="h5" sx={{ color, fontFamily: 'monospace', fontWeight: 'bold' }}>
+                {value}
+            </Typography>
+            {unit && <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>{unit}</Typography>}
+        </Box>
     </Box>
 );
 
@@ -52,7 +55,9 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
                 display: 'flex',
                 gap: 5,
                 zIndex: 100,
-                backdropFilter: 'blur(8px)'
+                backdropFilter: 'blur(8px)',
+                minWidth: 400,
+                justifyContent: 'space-around'
             }}
         >
             <StatItem label="SPEED" value={speedKmh} unit="km/h" color="primary.main" />
