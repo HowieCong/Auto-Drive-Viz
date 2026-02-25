@@ -91,11 +91,12 @@ self.onmessage = async (e) => {
 
         // If not prefetch, send back
         if (!prefetch) {
+            const transferList = [posBuffer, colBuffer] as Transferable[];
             self.postMessage({ 
                 positions: posBuffer, 
                 colors: colBuffer,
                 url
-            }, [posBuffer, colBuffer]);
+            }, { transfer: transferList });
         }
 
     } catch {

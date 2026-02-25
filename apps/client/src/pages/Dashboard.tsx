@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
   
   const [fileList, setFileList] = useState<string[]>(['2011_09_26_drive_0001_sync']);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedFile, setSelectedFile] = useState<string>('2011_09_26_drive_0001_sync');
   
   // State
@@ -105,6 +106,7 @@ export default function Dashboard() {
     // },
   }, [fileList]); // Re-render controls when fileList changes
 
+  const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/sample?frame=${currentFrame}&file=${selectedFile}`;
   // const sceneUrl = `http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}`;
 
   // Sync State from Metadata (No more polling for scene data)

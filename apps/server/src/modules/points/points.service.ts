@@ -83,7 +83,7 @@ export class PointsService implements OnModuleInit {
     } catch (e) {
       console.warn(
         'Failed to load KITTI data (ignore if running mock only):',
-        e.message,
+        (e as Error).message,
       );
     }
   }
