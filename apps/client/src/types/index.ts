@@ -36,3 +36,18 @@ export interface Voxel {
     color: string;
     semantic: string;
 }
+
+export interface Tracklet {
+  id: number;
+  frame: number;
+  type: string;
+  h: number;
+  w: number;
+  l: number;
+  tx: number;
+  ty: number;
+  tz: number;
+  rx: number;
+  ry: number;
+  rz: number;
+}

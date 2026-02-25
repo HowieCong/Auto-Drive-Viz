@@ -1,12 +1,12 @@
 
 import * as xml2js from 'xml2js';
 
-import type { BoundingBox3D, EgoState, BoundingBox2D } from '../types';
+import type { BoundingBox3D, EgoState, BoundingBox2D, Tracklet } from '../types';
 
 export class PointsService {
   private kittiRoot = '/data/kitti/2011_09_26';
   private currentDrive = '2011_09_26_drive_0001_sync';
-  private tracklets: any[] = [];
+  private tracklets: Tracklet[] = [];
   private calibVeloToCam: number[][] = [];
   private calibCamToCam: Record<string, number[][]> = {};
   private loaded = false;
@@ -129,9 +129,9 @@ export class PointsService {
     return calibs;
   }
 
-  private processTracklets(xml: any): any[] {
+  private processTracklets(xml: any): Tracklet[] {
     const items = xml.boost_serialization.tracklets[0].item || [];
-    const tracks: any[] = [];
+    const tracks: Tracklet[] = [];
     items.forEach((item: any, id: number) => {
       const type = item.objectType[0];
       const h = parseFloat(item.h[0]);
