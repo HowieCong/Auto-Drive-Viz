@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import type { BoundingBox2D } from '../types';
 
 interface VideoContainerProps {
   label: string;
@@ -9,6 +10,7 @@ interface VideoContainerProps {
   onTimeUpdate?: (t: number, f: number) => void;
   onDownload?: () => void;
   children: React.ReactNode;
+  boxes?: BoundingBox2D[]; // Add boxes prop
 }
 
 export function VideoContainer({ 
@@ -18,7 +20,8 @@ export function VideoContainer({
   totalFrames = 20,
   onTimeUpdate, 
   onDownload,
-  children 
+  children,
+  boxes = [] 
 }: VideoContainerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -140,12 +143,50 @@ export function VideoContainer({
 
             {/* Modal Content */}
             <div style={{ padding: '20px', background: '#000', display: 'flex', justifyContent: 'center' }}>
-               <div style={{ width: '100%', maxHeight: '60vh', display: 'flex', justifyContent: 'center' }}>
+               <div style={{ width: '100%', maxHeight: '60vh', display: 'flex', justifyContent: 'center', position: 'relative' }}>
                  <img 
                     src={src.replace(/frame=\d+/, `frame=${modalFrame}`)}
                     style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }}
                     alt="Full View"
                  />
+                 
+                 {/* Render 2D Boxes in Modal */}
+                 <svg 
+                    style={{ 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        width: '100%', 
+                        height: '100%',
+                        pointerEvents: 'none' 
+                    }}
+                    viewBox="0 0 1242 375" // Assuming KITTI resolution, ideally should be dynamic or percentage based
+                    preserveAspectRatio="xMidYMid meet"
+                 >
+                    {boxes.map((box, idx) => (
+                        <g key={idx}>
+                            <rect
+                                x={box.x}
+                                y={box.y}
+                                width={box.w}
+                                height={box.h}
+                                fill="none"
+                                stroke="#00ff00"
+                                strokeWidth="2"
+                            />
+                            <text
+                                x={box.x}
+                                y={box.y - 5}
+                                fill="#00ff00"
+                                fontSize="14"
+                                fontWeight="bold"
+                                style={{ textShadow: '1px 1px 2px black' }}
+                            >
+                                {box.label}
+                            </text>
+                        </g>
+                    ))}
+                 </svg>
                </div>
             </div>
 

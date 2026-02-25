@@ -67,6 +67,7 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
           src={getImageUrl(cam.id)}
           frame={frame}
           onTimeUpdate={cam.id === 'image_02' ? onTimeUpdate : undefined}
+          boxes={boxesMap[cam.id] || []}
         >
           <VideoPlayer
             src={getImageUrl(cam.id)}
