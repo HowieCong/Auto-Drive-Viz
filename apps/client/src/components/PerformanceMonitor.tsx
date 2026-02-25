@@ -1,37 +1,39 @@
-import { useControls, monitor } from 'leva';
 import { addEffect } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
-export function usePerformanceMonitor() {
-    const fpsRef = useRef(60);
-    const msRef = useRef(0);
+export function usePerformanceMetrics() {
+    const [metrics, setMetrics] = useState({ fps: 60, frameTime: 0 });
 
     useEffect(() => {
         let begin = performance.now();
         let prev = begin;
         let frames = 0;
+        let fps = 60;
 
         const unsub = addEffect(() => {
             frames++;
             const time = performance.now();
             
             // MS (Frame time)
-            msRef.current = time - begin;
+            const frameTime = time - begin;
             begin = time;
 
-            // FPS (Average over 1s roughly)
-            if (time >= prev + 1000) {
-                fpsRef.current = Math.round((frames * 1000) / (time - prev));
+            // FPS (Update every 500ms to avoid jittering UI)
+            if (time >= prev + 500) {
+                fps = Math.round((frames * 1000) / (time - prev));
                 prev = time;
                 frames = 0;
+                
+                // Update State
+                setMetrics({
+                    fps,
+                    frameTime: Number(frameTime.toFixed(1))
+                });
             }
         });
 
         return unsub;
     }, []);
 
-    useControls('Performance', {
-        FPS: monitor(() => fpsRef.current, { graph: true, interval: 100 }),
-        'Frame (ms)': monitor(() => msRef.current, { graph: true, interval: 30 }),
-    }, { collapsed: false });
+    return metrics;
 }

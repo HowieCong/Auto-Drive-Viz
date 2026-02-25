@@ -8,7 +8,6 @@ import { PointCloudViewer } from '../components/PointCloudViewer';
 import { CameraWall } from '../components/CameraWall';
 import { CockpitPanel } from '../components/CockpitPanel';
 import { TPVPanel } from '../components/TPVPanel';
-import { usePerformanceMonitor } from '../components/PerformanceMonitor';
 import { useControls } from 'leva';
 import { useState, useEffect } from 'react';
 import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
@@ -87,9 +86,6 @@ export default function Dashboard() {
       }
       return () => clearInterval(interval);
   }, [isPlaying]);
-
-  // Activate Performance Monitor in Leva
-  usePerformanceMonitor();
 
   const { pointSize, backgroundColor } = useControls({
     pointSize: { value: 0.1, min: 0.01, max: 1.0, step: 0.01 },

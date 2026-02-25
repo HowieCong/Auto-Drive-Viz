@@ -1,6 +1,8 @@
 import type { EgoState } from '../types';
 import { Box, Typography, Paper } from '@mui/material';
 
+import { usePerformanceMetrics } from './PerformanceMonitor';
+
 interface CockpitPanelProps {
     ego: EgoState | null;
 }
@@ -25,6 +27,8 @@ const StatItem = ({ label, value, unit, color = 'white' }: StatItemProps) => (
 );
 
 export function CockpitPanel({ ego }: CockpitPanelProps) {
+    const { fps, frameTime } = usePerformanceMetrics();
+
     if (!ego) return null;
 
     // Convert speed m/s to km/h
@@ -64,6 +68,8 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
             <StatItem label="ACCEL" value={accel} unit="m/s²" color={Number(accel) > 0 ? 'secondary.main' : 'success.main'} />
             <StatItem label="YAW RATE" value={yawRateDeg} unit="°/s" />
             <StatItem label="HEADING" value={direction} unit={`(${deg.toFixed(0)}°)`} color="text.secondary" />
+            <StatItem label="FPS" value={fps.toString()} color="warning.main" />
+            <StatItem label="FRAME" value={frameTime.toString()} unit="ms" color="warning.main" />
         </Paper>
     );
 }
