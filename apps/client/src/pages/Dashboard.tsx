@@ -150,6 +150,21 @@ export default function Dashboard() {
                     style={{ flex: 1, accentColor: '#00ffff' }}
                 />
             </div>
+
+            <div style={{ height: '30px', borderLeft: '1px solid #444' }} />
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ background: '#222', padding: '4px 10px', borderRadius: '4px', border: '1px solid #444', fontSize: '12px' }}>
+                    <span style={{ color: '#ccc', marginRight: '5px' }}>Mode:</span>
+                    <span style={{ color: '#00ffff', fontWeight: 'bold' }}>{viewMode.toUpperCase()}</span>
+                </div>
+                <div style={{ background: '#222', padding: '4px 10px', borderRadius: '4px', border: '1px solid #444', fontSize: '12px' }}>
+                    <span style={{ color: '#ccc', marginRight: '5px' }}>Source:</span>
+                    <span style={{ color: perceptionMode === 'occupancy' ? '#ff00ff' : '#00ff00', fontWeight: 'bold' }}>
+                        {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}
+                    </span>
+                </div>
+            </div>
         </div>
 
         {/* MAIN LAYOUT */}
@@ -157,17 +172,7 @@ export default function Dashboard() {
             
             {/* LEFT: 3D Visualization */}
             <div style={{ flex: 3, position: 'relative', borderRight: '1px solid #333' }}>
-                <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, display: 'flex', gap: '10px' }}>
-                    <div style={{ background: 'rgba(0,0,0,0.6)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #555' }}>
-                        Mode: <span style={{ color: '#00ffff' }}>{viewMode.toUpperCase()}</span>
-                    </div>
-                    <div style={{ background: 'rgba(0,0,0,0.6)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #555' }}>
-                        Source: <span style={{ color: perceptionMode === 'occupancy' ? '#ff00ff' : '#00ff00' }}>
-                            {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}
-                        </span>
-                    </div>
-                </div>
-
+                
                 <CockpitPanel ego={egoState} />
 
                 {viewMode === 'tpv' ? (
