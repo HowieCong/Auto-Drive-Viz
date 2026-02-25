@@ -1,3 +1,7 @@
+import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import { PointCloudViewer } from '../components/PointCloudViewer';
@@ -10,11 +14,6 @@ import { useState, useEffect } from 'react';
 import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
-
-import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
@@ -76,23 +75,7 @@ export default function Dashboard() {
       fetchData();
   }, [selectedFile]);
 
-  // Sync State from Metadata (No more polling for scene data)
-  useEffect(() => {
-      const updateState = () => {
-        if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
-            const frameData = sceneMetadata[currentFrame];
-            setObjects3D(frameData.objects);
-            setEgoState(frameData.ego);
-        } else if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
-            pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
-                setEgoState(data.ego);
-                setObjects3D(data.objects);
-            });
-        }
-      };
-      
-      updateState();
-  }, [currentFrame, sceneMetadata]);
+
 
   // Animation Loop
   useEffect(() => {
@@ -111,16 +94,15 @@ export default function Dashboard() {
   const { pointSize, backgroundColor } = useControls({
     pointSize: { value: 0.1, min: 0.01, max: 1.0, step: 0.01 },
     backgroundColor: '#0a0a0a',
-  'Switch View': {
+    'Switch View': {
         options: { 'Perspective': 'perspective', 'BEV': 'bev', 'TPV (Tri-View)': 'tpv' },
         value: 'perspective',
         onChange: (v: 'perspective' | 'bev' | 'tpv') => setViewMode(v)
-    },| 'bev' | 'tpv') => setViewMode(v)
     },
     'Resources': {
         options: fileList,
         value: selectedFile,
-        onChange: (v) => setSelectedFile(v)
+        onChange: (v: string) => setSelectedFile(v)
     },
     'Perception Source': {
         options: { 
@@ -130,10 +112,6 @@ export default function Dashboard() {
         value: 'lidar',
         onChange: (v: 'lidar' | 'occupancy' | 'model') => setPerceptionMode(v)
     },
-    // 'Search Scene': {
-    //     value: '',
-    //     onEditEnd: (query) => console.log('Searching for:', query) // Placeholder for future implementation
-    // }
   }, [fileList]); // Re-render controls when fileList changes
 
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;

@@ -3,7 +3,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
 import axios from 'axios';
-import { BoundingBox3D, EgoState, BoundingBox2D, Voxel } from '../../common/types';
+import {
+  BoundingBox3D,
+  EgoState,
+  BoundingBox2D,
+  Voxel,
+} from '../../common/types';
 
 @Injectable()
 export class PointsService implements OnModuleInit {
@@ -13,9 +18,10 @@ export class PointsService implements OnModuleInit {
     '../client/public/data/kitti/2011_09_26',
   );
   private currentDrive = '2011_09_26_drive_0001_sync';
-  
+
   // Algo Service URL
-  private readonly ALGO_SERVICE_URL = process.env.ALGO_SERVICE_URL || 'http://localhost:8000';
+  private readonly ALGO_SERVICE_URL =
+    process.env.ALGO_SERVICE_URL || 'http://localhost:8000';
 
   // Cache
   private tracklets: any[] = [];
@@ -206,21 +212,21 @@ export class PointsService implements OnModuleInit {
   }
 
   async getDriveMetadata(drive: string): Promise<any[]> {
-      await this.ensureDriveLoaded(drive);
-      const count = this.getKittiFrameCount();
-      const frames = [];
-      
-      // Batch collect all frames
-      for(let i=0; i<count; i++) {
-          const effectiveFrame = this.getEffectiveFrame(drive, i);
-          const { objects, ego } = this.getRealSceneObjects(effectiveFrame);
-          frames.push({
-              frame: i,
-              objects,
-              ego
-          });
-      }
-      return frames;
+    await this.ensureDriveLoaded(drive);
+    const count = this.getKittiFrameCount();
+    const frames = [];
+
+    // Batch collect all frames
+    for (let i = 0; i < count; i++) {
+      const effectiveFrame = this.getEffectiveFrame(drive, i);
+      const { objects, ego } = this.getRealSceneObjects(effectiveFrame);
+      frames.push({
+        frame: i,
+        objects,
+        ego,
+      });
+    }
+    return frames;
   }
 
   async getInferenceObjects(
@@ -339,7 +345,13 @@ export class PointsService implements OnModuleInit {
     } catch {
       // ignore
     }
-    return { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() };
+    return {
+      speed: 0,
+      heading: 0,
+      acceleration: 0,
+      yawRate: 0,
+      timestamp: Date.now(),
+    };
   }
 
   getReal2DBoxes(frame: number, camera: string = 'image_02'): BoundingBox2D[] {
@@ -496,7 +508,13 @@ export class PointsService implements OnModuleInit {
     } catch {
       return {
         objects: [],
-        ego: { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() },
+        ego: {
+          speed: 0,
+          heading: 0,
+          acceleration: 0,
+          yawRate: 0,
+          timestamp: Date.now(),
+        },
       };
     }
   }
@@ -529,7 +547,10 @@ export class PointsService implements OnModuleInit {
     }
   }
 
-  async getOccupancyData(frameIndex: number = 0, drive?: string): Promise<Voxel[]> {
+  async getOccupancyData(
+    frameIndex: number = 0,
+    drive?: string,
+  ): Promise<Voxel[]> {
     try {
       if (drive) await this.ensureDriveLoaded(drive);
       const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);

@@ -98,7 +98,7 @@ self.onmessage = async (e) => {
             }, [posBuffer, colBuffer]);
         }
 
-    } catch (err) {
+    } catch {
         // console.error(err);
     }
 };

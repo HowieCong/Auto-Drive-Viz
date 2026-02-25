@@ -1,4 +1,3 @@
-
 export interface BoundingBox2D {
   x: number;
   y: number;
@@ -24,7 +23,7 @@ export interface EgoState {
   speed: number;
   heading: number;
   acceleration: number; // m/s^2
-  yawRate: number;     // rad/s
+  yawRate: number; // rad/s
   timestamp: number;
 }
 

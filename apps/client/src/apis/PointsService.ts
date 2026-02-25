@@ -7,7 +7,7 @@ export class PointsService {
   private kittiRoot = '/data/kitti/2011_09_26';
   private currentDrive = '2011_09_26_drive_0001_sync';
   private tracklets: any[] = [];
-  private calibVeloToCam: number[][] = [];
+  private calibVeloToCam: number[][] = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
   private calibCamToCam: Record<string, number[][]> = {};
   private loaded = false;
 
@@ -138,7 +138,7 @@ export class PointsService {
       const w = parseFloat(item.w[0]);
       const l = parseFloat(item.l[0]);
       const first_frame = parseInt(item.first_frame[0]);
-      const poses = item.poses[0].item; 
+      const poses = item.poses[0].item || [];
       poses.forEach((pose: any, idx: number) => {
         const frame = first_frame + idx;
         tracks.push({

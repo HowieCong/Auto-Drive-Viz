@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Res,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Res, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { PointsService } from './points.service';
 
@@ -29,7 +23,10 @@ export class PointsController {
   }
 
   @Get('occupancy')
-  async getOccupancy(@Query('frame') frame: string, @Query('file') file: string) {
+  async getOccupancy(
+    @Query('frame') frame: string,
+    @Query('file') file: string,
+  ) {
     const frameIdx = parseInt(frame || '0', 10);
     return this.pointsService.getOccupancyData(frameIdx, file);
   }
@@ -61,7 +58,7 @@ export class PointsController {
 
   @Get('drive/metadata')
   async getDriveMetadata(@Query('file') file: string) {
-      return this.pointsService.getDriveMetadata(file);
+    return this.pointsService.getDriveMetadata(file);
   }
 
   @Get('boxes')
@@ -82,7 +79,11 @@ export class PointsController {
     @Res() res: Response,
   ) {
     const frameIdx = parseInt(frame || '0', 10);
-    const buffer = await this.pointsService.getImageData(frameIdx, camera, file);
+    const buffer = await this.pointsService.getImageData(
+      frameIdx,
+      camera,
+      file,
+    );
     res.set({
       'Content-Type': 'image/png',
       'Content-Length': buffer.length,
