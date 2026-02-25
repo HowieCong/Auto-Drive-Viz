@@ -35,9 +35,28 @@ export class PointsController {
   }
 
   @Get('scene')
-  async getSceneData(@Query('frame') frame: string, @Query('file') file: string) {
+  async getSceneData(
+    @Query('frame') frame: string,
+    @Query('file') file: string,
+    @Query('source') source: string = 'gt',
+  ) {
     const frameIdx = parseInt(frame || '0', 10);
-    return this.pointsService.getSceneObjects(frameIdx, file);
+
+    // Get Ground Truth
+    const scene = await this.pointsService.getSceneObjects(frameIdx, file);
+
+    // If source is model, replace objects with inference results
+    if (source === 'model') {
+      const detectedObjects = await this.pointsService.getInferenceObjects(
+        frameIdx,
+        file,
+      );
+      if (detectedObjects.length > 0) {
+        scene.objects = detectedObjects;
+      }
+    }
+
+    return scene;
   }
 
   @Get('drive/metadata')

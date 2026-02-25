@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
+import axios from 'axios';
 import { BoundingBox3D, EgoState, BoundingBox2D, Voxel } from '../../common/types';
 
 @Injectable()
@@ -12,6 +13,9 @@ export class PointsService implements OnModuleInit {
     '../client/public/data/kitti/2011_09_26',
   );
   private currentDrive = '2011_09_26_drive_0001_sync';
+  
+  // Algo Service URL
+  private readonly ALGO_SERVICE_URL = process.env.ALGO_SERVICE_URL || 'http://localhost:8000';
 
   // Cache
   private tracklets: any[] = [];
@@ -217,6 +221,30 @@ export class PointsService implements OnModuleInit {
           });
       }
       return frames;
+  }
+
+  async getInferenceObjects(
+    frameIndex: number,
+    drive?: string,
+  ): Promise<BoundingBox3D[]> {
+    try {
+      if (drive) await this.ensureDriveLoaded(drive);
+      const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);
+
+      // Call Python Algo Service
+      const response = await axios.post(`${this.ALGO_SERVICE_URL}/detect`, {
+        file: this.currentDrive,
+        frame: effectiveFrame,
+      });
+
+      if (response.data && response.data.objects) {
+        return response.data.objects;
+      }
+      return [];
+    } catch (e) {
+      console.error('Inference failed:', e.message);
+      return [];
+    }
   }
 
   // --- Real Data Getters ---
