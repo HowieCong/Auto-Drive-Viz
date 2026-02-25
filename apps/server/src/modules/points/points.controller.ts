@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Res,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Res, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { PointsService } from './points.service';
 
@@ -18,24 +12,41 @@ export class PointsController {
     @Query('file') file: string,
     @Res() res: Response,
   ) {
-    const frameIdx = parseInt(frame || '0', 10);
-    const buffer = await this.pointsService.getSampleData(frameIdx, file);
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Length': buffer.length,
-      'Access-Control-Allow-Origin': '*',
-    });
-    res.send(buffer);
+    try {
+      const frameIdx = parseInt(frame || '0', 10);
+      const buffer = await this.pointsService.getSampleData(frameIdx, file);
+      
+      if (!buffer || buffer.length === 0) {
+          res.status(404).send('Point cloud data not found');
+          return;
+      }
+
+      res.set({
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': buffer.length,
+        'Access-Control-Allow-Origin': '*',
+      });
+      res.send(buffer);
+    } catch (e) {
+      console.error('Error serving sample data:', e);
+      res.status(500).send('Internal Server Error');
+    }
   }
 
   @Get('occupancy')
-  async getOccupancy(@Query('frame') frame: string, @Query('file') file: string) {
+  async getOccupancy(
+    @Query('frame') frame: string,
+    @Query('file') file: string,
+  ) {
     const frameIdx = parseInt(frame || '0', 10);
     return this.pointsService.getOccupancyData(frameIdx, file);
   }
 
   @Get('scene')
-  async getSceneData(@Query('frame') frame: string, @Query('file') file: string) {
+  async getSceneData(
+    @Query('frame') frame: string,
+    @Query('file') file: string,
+  ) {
     const frameIdx = parseInt(frame || '0', 10);
     return this.pointsService.getSceneObjects(frameIdx, file);
   }
@@ -58,7 +69,11 @@ export class PointsController {
     @Res() res: Response,
   ) {
     const frameIdx = parseInt(frame || '0', 10);
-    const buffer = await this.pointsService.getImageData(frameIdx, camera, file);
+    const buffer = await this.pointsService.getImageData(
+      frameIdx,
+      camera,
+      file,
+    );
     res.set({
       'Content-Type': 'image/png',
       'Content-Length': buffer.length,
