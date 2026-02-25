@@ -10,21 +10,11 @@ import { useState, useEffect } from 'react';
 import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
-import { 
-    AppShell, 
-    Group, 
-    Title, 
-    Button, 
-    Slider, 
-    Text, 
-    Badge, 
-    ActionIcon, 
-    Divider,
-    Paper,
-    Stack,
-    Box
-} from '@mantine/core';
-import { IconCar, IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react';
+
+import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider, IconButton, Paper } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
@@ -139,80 +129,74 @@ export default function Dashboard() {
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
 
   return (
-    <AppShell
-      header={{ height: 60 }}
-      padding={0}
-      styles={{
-        main: { background: '#111', color: '#eee', height: '100vh', display: 'flex', flexDirection: 'column' }
-      }}
-    >
-      <AppShell.Header p="xs" bg="#1a1a1a" withBorder>
-        <Group justify="space-between" h="100%">
-            
-            {/* Logo & Title */}
-            <Group gap="xs">
-                <IconCar size={32} color="#00ffff" />
-                <Title order={3} c="white" style={{ fontStyle: 'italic' }}>
-                    <Text span c="cyan" inherit>Auto-Drive</Text>-Viz
-                </Title>
-            </Group>
-
-            <Divider orientation="vertical" />
-
-            {/* Playback Controls */}
-            <Group gap="md" style={{ flex: 1 }}>
+    <Box sx={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', color: 'text.primary' }}>
+        
+        {/* HEADER */}
+        <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Toolbar sx={{ minHeight: '60px !important', gap: 2 }}>
+                <Typography variant="h6" sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <DirectionsCarIcon fontSize="large" />
+                    Auto-Drive-Viz
+                </Typography>
+                
+                <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
+                
                 <Button 
-                    color={isPlaying ? 'red' : 'green'} 
+                    variant="contained" 
+                    color={isPlaying ? "error" : "success"}
+                    startIcon={isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
                     onClick={() => setIsPlaying(!isPlaying)}
-                    leftSection={isPlaying ? <IconPlayerPause size={16} /> : <IconPlayerPlay size={16} />}
+                    sx={{ fontWeight: 'bold' }}
                 >
                     {isPlaying ? 'PAUSE' : 'PLAY'}
                 </Button>
 
-                <Group style={{ flex: 1 }} gap="xs">
-                    <Text size="sm" c="dimmed" w={80}>Frame: {currentFrame}</Text>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, mx: 2 }}>
+                    <Typography variant="body2" sx={{ minWidth: 80 }}>Frame: {currentFrame}</Typography>
                     <Slider 
-                        value={currentFrame}
-                        onChange={setCurrentFrame}
-                        min={0}
-                        max={19}
+                        min={0} max={19} 
+                        value={currentFrame} 
+                        onChange={(_, v) => setCurrentFrame(v as number)}
                         step={1}
-                        style={{ flex: 1 }}
-                        color="cyan"
-                        label={null}
+                        size="small"
+                        sx={{ flex: 1 }}
                     />
-                </Group>
-            </Group>
+                </Box>
 
-            <Divider orientation="vertical" />
+                <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
 
-            {/* Badges */}
-            <Group gap="sm">
-                <Badge variant="outline" color="gray" size="lg" radius="md" styles={{ root: { textTransform: 'none', borderColor: '#444', background: '#222' } }}>
-                    <Group gap={6}>
-                        <Text c="dimmed" size="xs">Mode:</Text>
-                        <Text c="cyan" fw={700}>{viewMode.toUpperCase()}</Text>
-                    </Group>
-                </Badge>
-                
-                <Badge variant="outline" color="gray" size="lg" radius="md" styles={{ root: { textTransform: 'none', borderColor: '#444', background: '#222' } }}>
-                    <Group gap={6}>
-                        <Text c="dimmed" size="xs">Source:</Text>
-                        <Text c={perceptionMode === 'occupancy' ? 'grape' : 'green'} fw={700}>
-                            {perceptionMode === 'occupancy' ? 'VISION' : 'LIDAR'}
-                        </Text>
-                    </Group>
-                </Badge>
-            </Group>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Chip 
+                        label={`Mode: ${viewMode.toUpperCase()}`} 
+                        variant="outlined" 
+                        sx={{ 
+                            borderColor: '#444', 
+                            bgcolor: '#222',
+                            '& .MuiChip-label': { color: 'primary.main', fontWeight: 'bold' }
+                        }} 
+                    />
+                    <Chip 
+                        label={`Source: ${perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}`} 
+                        variant="outlined" 
+                        sx={{ 
+                            borderColor: '#444', 
+                            bgcolor: '#222',
+                            '& .MuiChip-label': { 
+                                color: perceptionMode === 'occupancy' ? 'secondary.main' : 'success.main', 
+                                fontWeight: 'bold' 
+                            }
+                        }} 
+                    />
+                </Box>
+            </Toolbar>
+        </AppBar>
 
-        </Group>
-      </AppShell.Header>
-
-      <AppShell.Main>
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 60px)' }}>
+        {/* MAIN LAYOUT */}
+        <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
             
             {/* LEFT: 3D Visualization */}
-            <div style={{ flex: 3, position: 'relative', borderRight: '1px solid #333' }}>
+            <Box sx={{ flex: 3, position: 'relative', borderRight: 1, borderColor: 'divider' }}>
+                
                 <CockpitPanel ego={egoState} />
 
                 {viewMode === 'tpv' ? (
@@ -248,31 +232,26 @@ export default function Dashboard() {
                         <OrbitControls makeDefault />
                     </Canvas>
                 )}
-            </div>
+            </Box>
 
-            {/* RIGHT: Analysis Sidebar */}
-            <div style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', background: '#1a1a1a', borderLeft: '1px solid #333' }}>
-                <Paper bg="dark.8" radius={0} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Group p="xs" justify="space-between" style={{ borderBottom: '1px solid #333' }}>
-                        <Text size="xs" fw={700} c="dimmed">SURROUND CAMERAS (4/6)</Text>
-                        <Group gap={4}>
-                            <Box w={8} h={8} bg="green" style={{ borderRadius: '50%' }} />
-                            <Text size="xs" c="green" fw={700}>LIVE</Text>
-                        </Group>
-                    </Group>
-                    
-                    <div style={{ flex: 1 }}>
+            {/* RIGHT: Analysis */}
+            <Box sx={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
+                <Box sx={{ flex: 1, bgcolor: '#000', borderBottom: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ p: 1, fontSize: '12px', color: 'text.secondary', borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="caption">SURROUND CAMERAS (4/6)</Typography>
+                        <Typography variant="caption" sx={{ color: 'success.main' }}>● LIVE</Typography>
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
                         <CameraWall 
                             frame={currentFrame} 
                             file={selectedFile} 
                             onTimeUpdate={(_, f) => setCurrentFrame(f)} 
                         />
-                    </div>
-                </Paper>
-            </div>
+                    </Box>
+                </Box>
+            </Box>
 
-        </div>
-      </AppShell.Main>
-    </AppShell>
+        </Box>
+    </Box>
   );
 }
