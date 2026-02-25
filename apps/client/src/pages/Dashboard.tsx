@@ -173,7 +173,7 @@ export default function Dashboard() {
 
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <Chip 
-                        label={`Mode: ${viewMode.toUpperCase()}`} 
+                        label={`View: ${viewMode.toUpperCase()}`} 
                         variant="outlined" 
                         sx={{ 
                             borderColor: '#444', 
