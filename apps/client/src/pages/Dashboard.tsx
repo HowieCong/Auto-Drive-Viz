@@ -105,7 +105,6 @@ export default function Dashboard() {
     // },
   }, [fileList]); // Re-render controls when fileList changes
 
-  const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
   // const sceneUrl = `http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}`;
 
   // Sync State from Metadata (No more polling for scene data)
