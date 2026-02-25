@@ -13,7 +13,6 @@ export class PointsService implements OnModuleInit {
     '../client/public/data/kitti/2011_09_26',
   );
   private currentDrive = '2011_09_26_drive_0001_sync';
-  private readonly BLOB_BASE_URL = process.env.BLOB_BASE_URL; // e.g., https://xyz.public.blob.vercel-storage.com
 
   // Cache
   private tracklets: any[] = [];
@@ -28,37 +27,6 @@ export class PointsService implements OnModuleInit {
 
   async onModuleInit() {
     await this.loadKittiData();
-  }
-
-  // Helper to get data either from FS or Blob
-  private async getData(
-    relativePath: string,
-    isBinary = false,
-  ): Promise<Buffer | string> {
-    // If BLOB_BASE_URL is set, fetch from Blob
-    if (this.BLOB_BASE_URL) {
-      const url = `${this.BLOB_BASE_URL}/${relativePath}`;
-      console.log(`Fetching from Blob: ${url}`);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Failed to fetch blob: ${url}`);
-      if (isBinary) {
-        const arrayBuffer = await res.arrayBuffer();
-        return Buffer.from(arrayBuffer);
-      } else {
-        return await res.text();
-      }
-    }
-
-    // Fallback to local FS
-    const localPath = path.join(this.kittiRoot, relativePath);
-    if (fs.existsSync(localPath)) {
-      if (isBinary) {
-        return fs.readFileSync(localPath);
-      } else {
-        return fs.readFileSync(localPath, 'utf8');
-      }
-    }
-    throw new Error(`File not found: ${localPath}`);
   }
 
   async reloadData() {
@@ -81,25 +49,35 @@ export class PointsService implements OnModuleInit {
   async loadKittiData() {
     try {
       // 1. Load Calib (Global for date, usually same for same day)
-      const calibVelo = (await this.getData('calib_velo_to_cam.txt')) as string;
+      const calibVelo = fs.readFileSync(
+        path.join(this.kittiRoot, 'calib_velo_to_cam.txt'),
+        'utf8',
+      );
       this.calibVeloToCam = this.parseVeloCalib(calibVelo);
 
-      const calibCam = (await this.getData('calib_cam_to_cam.txt')) as string;
+      const calibCam = fs.readFileSync(
+        path.join(this.kittiRoot, 'calib_cam_to_cam.txt'),
+        'utf8',
+      );
       this.calibCamToCam = this.parseCamCalib(calibCam);
       console.log('Loaded Calibration');
 
       // 2. Load Tracklets for Current Drive
-      const trackletPath = `${this.currentDrive}/tracklet_labels.xml`;
-      try {
-        const xml = (await this.getData(trackletPath)) as string;
+      const trackletPath = path.join(
+        this.kittiRoot,
+        this.currentDrive,
+        'tracklet_labels.xml',
+      );
+      if (fs.existsSync(trackletPath)) {
+        const xml = fs.readFileSync(trackletPath, 'utf8');
         const parser = new xml2js.Parser();
         const result = await parser.parseStringPromise(xml);
         this.tracklets = this.processTracklets(result);
         console.log(
           `Loaded ${this.tracklets.length} tracklets for ${this.currentDrive}`,
         );
-      } catch {
-        console.warn('Tracklet file not found or load failed:', trackletPath);
+      } else {
+        console.warn('Tracklet file not found:', trackletPath);
         this.tracklets = [];
       }
     } catch (e) {
@@ -246,21 +224,28 @@ export class PointsService implements OnModuleInit {
   ): Promise<Buffer> {
     // camera: image_00, image_01, image_02, image_03
     const name = frame.toString().padStart(10, '0') + '.png';
-    const relativePath = `${this.currentDrive}/${camera}/data/${name}`;
-
-    // For images, we can redirect (better) or proxy.
-    // Here we proxy to keep API consistent.
-    const data = await this.getData(relativePath, true);
-    return data as Buffer;
+    const file = path.join(
+      this.kittiRoot,
+      this.currentDrive,
+      camera,
+      'data',
+      name,
+    );
+    if (fs.existsSync(file)) return fs.readFileSync(file);
+    throw new Error(`Image not found: ${camera}/${name}`);
   }
 
   async getRealLidar(frame: number): Promise<Buffer> {
     // velodyne_points/data/0000000000.bin
     const name = frame.toString().padStart(10, '0') + '.bin';
-    const relativePath = `${this.currentDrive}/velodyne_points/data/${name}`;
-
-    const data = await this.getData(relativePath, true);
-    return data as Buffer;
+    const file = path.join(
+      this.kittiRoot,
+      this.currentDrive,
+      'velodyne_points/data',
+      name,
+    );
+    if (fs.existsSync(file)) return fs.readFileSync(file);
+    throw new Error('Lidar not found');
   }
 
   async getRealSceneObjects(frame: number): Promise<{
@@ -295,23 +280,29 @@ export class PointsService implements OnModuleInit {
     try {
       // oxts/data/0000000000.txt
       const name = frame.toString().padStart(10, '0') + '.txt';
-      const relativePath = `${this.currentDrive}/oxts/data/${name}`;
+      const file = path.join(
+        this.kittiRoot,
+        this.currentDrive,
+        'oxts/data',
+        name,
+      );
+      if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file, 'utf8').trim();
+        const vals = content.split(' ').map(Number);
 
-      const content = (await this.getData(relativePath)) as string;
-      const vals = content.trim().split(' ').map(Number);
+        const speed = vals[8]; // vf (forward velocity)
+        const heading = vals[5]; // yaw
+        const acceleration = vals[14]; // af
+        const yawRate = vals[19]; // wz
 
-      const speed = vals[8]; // vf (forward velocity)
-      const heading = vals[5]; // yaw
-      const acceleration = vals[14]; // af
-      const yawRate = vals[19]; // wz
-
-      return {
-        speed: speed, // m/s
-        heading: heading,
-        acceleration: acceleration,
-        yawRate: yawRate,
-        timestamp: Date.now(), // Mock timestamp or calculate from frame
-      };
+        return {
+          speed: speed, // m/s
+          heading: heading,
+          acceleration: acceleration,
+          yawRate: yawRate,
+          timestamp: Date.now(), // Mock timestamp or calculate from frame
+        };
+      }
     } catch {
       // ignore
     }
@@ -519,13 +510,6 @@ export class PointsService implements OnModuleInit {
 
   getFiles(): string[] {
     try {
-      // If Blob, we might need to list blobs. For now, static list or mock.
-      if (this.BLOB_BASE_URL) {
-        // This is a placeholder. In real blob storage, we would list prefixes.
-        // For MVP, we just return the known drive.
-        return ['2011_09_26_drive_0001_sync'];
-      }
-
       if (!fs.existsSync(this.kittiRoot)) return [];
       return fs
         .readdirSync(this.kittiRoot)
