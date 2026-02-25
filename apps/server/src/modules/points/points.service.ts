@@ -2,12 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xml2js from 'xml2js';
-import {
-  BoundingBox3D,
-  EgoState,
-  BoundingBox2D,
-  Voxel,
-} from '../../common/types';
+import { BoundingBox3D, EgoState, BoundingBox2D, Voxel } from '../../common/types';
 
 @Injectable()
 export class PointsService implements OnModuleInit {
@@ -152,58 +147,45 @@ export class PointsService implements OnModuleInit {
   }
 
   processTracklets(xml: any): any[] {
-    try {
-        // Check if tracklets exists in xml structure
-        if (!xml || !xml.boost_serialization || !xml.boost_serialization.tracklets || !xml.boost_serialization.tracklets[0]) {
-            console.warn('Invalid XML structure for tracklets');
-            return [];
-        }
+    // KITTI XML format parsing
+    // <item> <objectType>Car</objectType> <h>...</h> <w>...</w> <l>...</l> <first_frame>...</first_frame> <poses>...</poses> </item>
+    const items = xml.boost_serialization.tracklets[0].item || [];
+    const tracks: any[] = [];
 
-        // KITTI XML format parsing
-        // <item> <objectType>Car</objectType> <h>...</h> <w>...</w> <l>...</l> <first_frame>...</first_frame> <poses>...</poses> </item>
-        const items = xml.boost_serialization.tracklets[0].item || [];
-        const tracks: any[] = [];
+    items.forEach((item: any, id: number) => {
+      const type = item.objectType[0];
+      const h = parseFloat(item.h[0]);
+      const w = parseFloat(item.w[0]);
+      const l = parseFloat(item.l[0]);
+      const first_frame = parseInt(item.first_frame[0]);
+      const poses = item.poses[0].item; // Array of pose
 
-        items.forEach((item: any, id: number) => {
-        const type = item.objectType[0];
-        const h = parseFloat(item.h[0]);
-        const w = parseFloat(item.w[0]);
-        const l = parseFloat(item.l[0]);
-        const first_frame = parseInt(item.first_frame[0]);
-        const poses = item.poses[0].item; // Array of pose
+      poses.forEach((pose: any, idx: number) => {
+        const frame = first_frame + idx;
+        const tx = parseFloat(pose.tx[0]);
+        const ty = parseFloat(pose.ty[0]);
+        const tz = parseFloat(pose.tz[0]);
+        const rx = parseFloat(pose.rx[0]);
+        const ry = parseFloat(pose.ry[0]);
+        const rz = parseFloat(pose.rz[0]);
 
-        if (!poses) return;
-
-        poses.forEach((pose: any, idx: number) => {
-            const frame = first_frame + idx;
-            const tx = parseFloat(pose.tx[0]);
-            const ty = parseFloat(pose.ty[0]);
-            const tz = parseFloat(pose.tz[0]);
-            const rx = parseFloat(pose.rx[0]);
-            const ry = parseFloat(pose.ry[0]);
-            const rz = parseFloat(pose.rz[0]);
-
-            tracks.push({
-            id,
-            frame,
-            type,
-            h,
-            w,
-            l,
-            tx,
-            ty,
-            tz,
-            rx,
-            ry,
-            rz,
-            });
+        tracks.push({
+          id,
+          frame,
+          type,
+          h,
+          w,
+          l,
+          tx,
+          ty,
+          tz,
+          rx,
+          ry,
+          rz,
         });
-        });
-        return tracks;
-    } catch (e) {
-        console.error('Error processing tracklets:', e);
-        return [];
-    }
+      });
+    });
+    return tracks;
   }
 
   getKittiFrameCount(): number {
@@ -245,8 +227,7 @@ export class PointsService implements OnModuleInit {
       name,
     );
     if (fs.existsSync(file)) return fs.readFileSync(file);
-
-    console.warn(`Lidar file not found: ${file}`);
+    // Fallback to sample if not found? No, error.
     throw new Error('Lidar not found');
   }
 
@@ -308,21 +289,11 @@ export class PointsService implements OnModuleInit {
           yawRate: yawRate,
           timestamp: Date.now(), // Mock timestamp or calculate from frame
         };
-      return {
-        speed: 0,
-        heading: 0,
-        acceleration: 0,
-        yawRate: 0,
-        timestamp: Date.now(),
-      };
+      }
+    } catch {
+      // ignore
     }
-    return {
-      speed: 0,
-      heading: 0,
-      acceleration: 0,
-      yawRate: 0,
-      timestamp: Date.now(),
-    };
+    return { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() };
   }
 
   getReal2DBoxes(frame: number, camera: string = 'image_02'): BoundingBox2D[] {
@@ -448,11 +419,7 @@ export class PointsService implements OnModuleInit {
       if (drive) await this.ensureDriveLoaded(drive);
       const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);
       return this.getRealLidar(effectiveFrame);
-    } catch (e) {
-      console.error(
-        `Failed to get sample data for frame ${frameIndex}:`,
-        e.message,
-      );
+    } catch {
       return Buffer.alloc(0);
     }
   }
@@ -466,28 +433,24 @@ export class PointsService implements OnModuleInit {
   }> {
     try {
       if (drive) await this.ensureDriveLoaded(drive);
-      
+      // Note: We don't reverse frame for objects here because we handle it in processTracklets or we should pass effectiveFrame?
+      // Actually, if we reverse the inputs (Lidar/Image), we should also reverse the Ground Truth.
+      // But tracklets are loaded once.
+      // Let's handle it by passing effectiveFrame to getRealSceneObjects,
+      // BUT getRealSceneObjects filters by t.frame.
+      // So we just need to pass the effective frame.
       const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);
-      
-      // Ensure we have loaded tracklets
-      if (this.tracklets.length === 0) {
-          // Try loading again if empty? Or just log warning
-          // console.warn('No tracklets loaded for drive:', this.currentDrive);
-      }
 
       const result = this.getRealSceneObjects(effectiveFrame);
+
+      // If reversed, we might want to rotate the bounding boxes 180 deg?
+      // No, the world is static, the ego is moving backwards.
+      // The tracklet frame matches the lidar/image frame. So it's consistent.
       return result;
-    } catch (e) {
-      console.error(`Error getting scene objects for frame ${frameIndex}:`, e);
+    } catch {
       return {
         objects: [],
-        ego: {
-          speed: 0,
-          heading: 0,
-          acceleration: 0,
-          yawRate: 0,
-          timestamp: Date.now(),
-        },
+        ego: { speed: 0, heading: 0, acceleration: 0, yawRate: 0, timestamp: Date.now() },
       };
     }
   }
@@ -520,10 +483,7 @@ export class PointsService implements OnModuleInit {
     }
   }
 
-  async getOccupancyData(
-    frameIndex: number = 0,
-    drive?: string,
-  ): Promise<Voxel[]> {
+  async getOccupancyData(frameIndex: number = 0, drive?: string): Promise<Voxel[]> {
     try {
       if (drive) await this.ensureDriveLoaded(drive);
       const effectiveFrame = this.getEffectiveFrame(drive, frameIndex);

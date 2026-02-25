@@ -1,40 +1,15 @@
 import { Canvas } from '@react-three/fiber';
-import { View, OrthographicCamera, PerspectiveCamera, OrbitControls } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import { PointCloudViewer } from '../components/PointCloudViewer';
 import { CameraWall } from '../components/CameraWall';
 import { CockpitPanel } from '../components/CockpitPanel';
+import { TPVPanel } from '../components/TPVPanel';
 import { usePerformanceMonitor } from '../components/PerformanceMonitor';
-import { useControls, button } from 'leva';
+import { useControls } from 'leva';
 import { useState, useEffect } from 'react';
 import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
-
-// Helper component for scene content to avoid duplication
-const SceneContent = ({ pointSize, url, objects3D, showGrid = true }: any) => (
-    <>
-        <ambientLight intensity={0.4} />
-        <pointLight position={[20, 20, 20]} intensity={0.8} />
-        
-        {showGrid && <gridHelper args={[200, 20, 0x444444, 0x222222]} rotation={[Math.PI / 2, 0, 0]} />}
-        <axesHelper args={[2]} />
-        
-        <PointCloudViewer size={pointSize} url={url} />
-
-        {objects3D.map((obj: any) => (
-            <BoundingBox3DVisualizer 
-                key={obj.id} 
-                box={obj} 
-                color={obj.label === 'Car' ? '#00ff00' : obj.label === 'Pedestrian' ? '#ff0000' : '#ffff00'} 
-            />
-        ))}
-
-        <mesh position={[0, 0, 0.5]}>
-            <boxGeometry args={[2, 4.5, 1.5]} />
-            <meshStandardMaterial color="#888" transparent opacity={0.5} />
-        </mesh>
-    </>
-);
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
@@ -104,7 +79,7 @@ export default function Dashboard() {
 
   // Animation Loop
   useEffect(() => {
-      let interval: any;
+      let interval: ReturnType<typeof setInterval>;
       if (isPlaying) {
           interval = setInterval(() => {
               setCurrentFrame(f => (f + 1) % 20); 
@@ -120,7 +95,7 @@ export default function Dashboard() {
     pointSize: { value: 0.1, min: 0.01, max: 1.0, step: 0.01 },
     backgroundColor: '#0a0a0a',
     'Switch View': {
-        options: { 'Perspective': 'perspective', 'BEV (Top-Down)': 'bev', 'TPV (Tri-View)': 'tpv' },
+        options: { 'Perspective': 'perspective', 'BEV': 'bev', 'TPV (Tri-View)': 'tpv' },
         value: 'perspective',
         onChange: (v: 'perspective' | 'bev' | 'tpv') => setViewMode(v)
     },
@@ -189,66 +164,39 @@ export default function Dashboard() {
 
                 <CockpitPanel ego={egoState} />
 
-                <Canvas style={{ background: backgroundColor }} eventSource={document.getElementById('root')!}>
-                    {/* Perspective View (Default) */}
-                    {viewMode === 'perspective' && (
-                        <View index={1} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-                            <PerspectiveCamera makeDefault position={[0, -40, 20]} fov={50} up={[0, 0, 1]} />
-                            <OrbitControls makeDefault />
-                            <SceneContent pointSize={pointSize} url={url} objects3D={objects3D} />
-                        </View>
-                    )}
+                {viewMode === 'tpv' ? (
+                    <TPVPanel url={url} objects={objects3D} pointSize={pointSize} />
+                ) : (
+                    <Canvas style={{ background: backgroundColor }}>
+                        {viewMode === 'perspective' && <PerspectiveCamera makeDefault position={[0, -40, 20]} fov={50} up={[0, 0, 1]} />}
+                        {viewMode === 'bev' && <OrthographicCamera makeDefault position={[0, 0, 60]} zoom={12} up={[0, 1, 0]} />}
+                        
+                        <ambientLight intensity={0.4} />
+                        <pointLight position={[20, 20, 20]} intensity={0.8} />
+                        
+                        <gridHelper args={[200, 20, 0x444444, 0x222222]} rotation={[Math.PI / 2, 0, 0]} />
+                        <axesHelper args={[2]} />
+                        
+                        {/* Always render PointCloud as base */}
+                        <PointCloudViewer size={pointSize} url={url} />
 
-                    {/* BEV View */}
-                    {viewMode === 'bev' && (
-                        <View index={1} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-                            <OrthographicCamera makeDefault position={[0, 0, 60]} zoom={12} up={[0, 1, 0]} />
-                            <OrbitControls makeDefault enableRotate={false} />
-                            <SceneContent pointSize={pointSize} url={url} objects3D={objects3D} />
-                        </View>
-                    )}
+                        {/* 3D Bounding Boxes */}
+                        {objects3D.map(obj => (
+                            <BoundingBox3DVisualizer 
+                                key={obj.id} 
+                                box={obj} 
+                                color={obj.label === 'Car' ? '#00ff00' : obj.label === 'Pedestrian' ? '#ff0000' : '#ffff00'} 
+                            />
+                        ))}
 
-                    {/* TPV View (Tri-Perspective View) */}
-                    {viewMode === 'tpv' && (
-                        <>
-                            {/* Top View (XY Plane) - Top Left */}
-                            <View index={1} style={{ position: 'absolute', top: 0, left: 0, width: '50%', height: '50%', borderRight: '1px solid #333', borderBottom: '1px solid #333' }}>
-                                <OrthographicCamera makeDefault position={[0, 0, 60]} zoom={10} up={[0, 1, 0]} />
-                                <OrbitControls makeDefault enableRotate={false} />
-                                <color attach="background" args={['#111']} />
-                                <SceneContent pointSize={pointSize} url={url} objects3D={objects3D} />
-                                <div style={{ position: 'absolute', bottom: 10, left: 10, color: 'cyan', fontSize: '12px', pointerEvents: 'none' }}>TOP (XY)</div>
-                            </View>
+                        <mesh position={[0, 0, 0.5]}>
+                            <boxGeometry args={[2, 4.5, 1.5]} />
+                            <meshStandardMaterial color="#888" transparent opacity={0.5} />
+                        </mesh>
 
-                            {/* Front View (XZ Plane) - Bottom Left */}
-                            <View index={2} style={{ position: 'absolute', bottom: 0, left: 0, width: '50%', height: '50%', borderRight: '1px solid #333' }}>
-                                <OrthographicCamera makeDefault position={[0, -60, 0]} zoom={10} up={[0, 0, 1]} />
-                                <OrbitControls makeDefault enableRotate={false} />
-                                <color attach="background" args={['#111']} />
-                                <SceneContent pointSize={pointSize} url={url} objects3D={objects3D} showGrid={false} />
-                                <div style={{ position: 'absolute', bottom: 10, left: 10, color: 'cyan', fontSize: '12px', pointerEvents: 'none' }}>FRONT (XZ)</div>
-                            </View>
-
-                            {/* Side View (YZ Plane) - Top Right */}
-                            <View index={3} style={{ position: 'absolute', top: 0, right: 0, width: '50%', height: '50%', borderBottom: '1px solid #333' }}>
-                                <OrthographicCamera makeDefault position={[60, 0, 0]} zoom={10} up={[0, 0, 1]} />
-                                <OrbitControls makeDefault enableRotate={false} />
-                                <color attach="background" args={['#111']} />
-                                <SceneContent pointSize={pointSize} url={url} objects3D={objects3D} showGrid={false} />
-                                <div style={{ position: 'absolute', bottom: 10, left: 10, color: 'cyan', fontSize: '12px', pointerEvents: 'none' }}>SIDE (YZ)</div>
-                            </View>
-
-                            {/* Perspective (Free) - Bottom Right */}
-                            <View index={4} style={{ position: 'absolute', bottom: 0, right: 0, width: '50%', height: '50%' }}>
-                                <PerspectiveCamera makeDefault position={[20, -20, 20]} fov={50} up={[0, 0, 1]} />
-                                <OrbitControls makeDefault />
-                                <color attach="background" args={['#222']} />
-                                <SceneContent pointSize={pointSize} url={url} objects3D={objects3D} />
-                                <div style={{ position: 'absolute', bottom: 10, left: 10, color: 'cyan', fontSize: '12px', pointerEvents: 'none' }}>FREE</div>
-                            </View>
-                        </>
-                    )}
-                </Canvas>
+                        <OrbitControls makeDefault />
+                    </Canvas>
+                )}
             </div>
 
             {/* RIGHT: Analysis */}
