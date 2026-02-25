@@ -49,14 +49,30 @@ export function VideoPlayer({ src, frame, onTimeUpdate, boxes = [], mode = 'imag
 
         // Draw
         boxes.forEach(box => {
-            // No scaling needed if canvas matches image dimensions exactly
+            // Box
             ctx.strokeStyle = '#00ff00';
             ctx.lineWidth = 2;
             ctx.strokeRect(box.x, box.y, box.w, box.h);
 
-            ctx.fillStyle = '#00ff00';
-            ctx.font = '14px Arial';
-            ctx.fillText(`${box.label} ${(box.confidence * 100).toFixed(0)}%`, box.x, box.y - 5);
+            // Label Background
+            const text = `${box.label}`;
+            ctx.font = 'bold 12px Arial';
+            const textMetrics = ctx.measureText(text);
+            const padding = 4;
+            const textW = textMetrics.width + padding * 2;
+            const textH = 16 + padding * 2;
+
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.2)'; // Semi-transparent green bg
+            ctx.fillRect(box.x, box.y - textH + 2, textW, textH);
+            
+            // Label Border
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(box.x, box.y - textH + 2, textW, textH);
+
+            // Text
+            ctx.fillStyle = '#ffffff'; // White text
+            ctx.fillText(text, box.x + padding, box.y - 6);
         });
     }, [boxes, dimensions]);
 

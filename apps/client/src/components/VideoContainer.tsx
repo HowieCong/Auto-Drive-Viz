@@ -163,28 +163,46 @@ export function VideoContainer({
                     viewBox="0 0 1242 375" // Assuming KITTI resolution, ideally should be dynamic or percentage based
                     preserveAspectRatio="xMidYMid meet"
                  >
-                    {boxes.map((box, idx) => (
-                        <g key={idx}>
-                            <rect
-                                x={box.x}
-                                y={box.y}
-                                width={box.w}
-                                height={box.h}
-                                fill="none"
-                                stroke="#00ff00"
-                                strokeWidth="2"
-                            />
-                            <text
-                                x={box.x}
-                                y={box.y - 5}
-                                fill="#00ff00"
-                                fontSize="14"
-                                fontFamily="Arial"
-                            >
-                                {box.label} {(box.confidence * 100).toFixed(0)}%
-                            </text>
-                        </g>
-                    ))}
+                    {boxes.map((box, idx) => {
+                         const textWidth = box.label.length * 8 + 10; // Approximate width
+                         return (
+                            <g key={idx}>
+                                {/* Box */}
+                                <rect
+                                    x={box.x}
+                                    y={box.y}
+                                    width={box.w}
+                                    height={box.h}
+                                    fill="none"
+                                    stroke="#00ff00"
+                                    strokeWidth="2"
+                                />
+                                
+                                {/* Label Background */}
+                                <rect
+                                    x={box.x}
+                                    y={box.y - 20}
+                                    width={textWidth}
+                                    height={20}
+                                    fill="rgba(0, 255, 0, 0.2)"
+                                    stroke="#00ff00"
+                                    strokeWidth="1"
+                                />
+
+                                {/* Label Text */}
+                                <text
+                                    x={box.x + 5}
+                                    y={box.y - 5}
+                                    fill="#ffffff"
+                                    fontSize="12"
+                                    fontWeight="bold"
+                                    style={{ textShadow: '1px 1px 1px black' }}
+                                >
+                                    {box.label}
+                                </text>
+                            </g>
+                         );
+                     })}
                  </svg>
                </div>
             </div>
