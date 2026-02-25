@@ -20,27 +20,42 @@ export function CockpitPanel({ ego }: CockpitPanelProps) {
     const direction = dirs[dirIdx];
 
     return (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-black/80 border border-[#444] rounded-xl px-8 py-4 text-white flex gap-10 font-mono z-[100] backdrop-blur-[4px]">
-            <div className="text-center">
-                <div className="text-xs text-[#888]">SPEED</div>
-                <div className="text-2xl text-[#00ffff] whitespace-nowrap">{speedKmh} <span className="text-sm">km/h</span></div>
+        <div style={{
+            position: 'absolute',
+            bottom: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '1px solid #444',
+            borderRadius: '12px',
+            padding: '15px 30px',
+            color: 'white',
+            display: 'flex',
+            gap: '40px',
+            fontFamily: 'monospace',
+            zIndex: 100,
+            backdropFilter: 'blur(4px)'
+        }}>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: '#888' }}>SPEED</div>
+                <div style={{ fontSize: '24px', color: '#00ffff', whiteSpace: 'nowrap' }}>{speedKmh} <span style={{fontSize: '14px'}}>km/h</span></div>
             </div>
             
-            <div className="text-center">
-                <div className="text-xs text-[#888]">ACCEL</div>
-                <div className={`text-2xl whitespace-nowrap ${Number(accel) > 0 ? 'text-[#ff00ff]' : 'text-[#00ff00'}`}>
-                    {accel} <span className="text-sm">m/s²</span>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: '#888' }}>ACCEL</div>
+                <div style={{ fontSize: '24px', color: Number(accel) > 0 ? '#ff00ff' : '#00ff00', whiteSpace: 'nowrap' }}>
+                    {accel} <span style={{fontSize: '14px'}}>m/s²</span>
                 </div>
             </div>
 
-            <div className="text-center">
-                <div className="text-xs text-[#888]">YAW RATE</div>
-                <div className="text-2xl text-white whitespace-nowrap">{yawRateDeg} <span className="text-sm">°/s</span></div>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: '#888' }}>YAW RATE</div>
+                <div style={{ fontSize: '24px', color: 'white', whiteSpace: 'nowrap' }}>{yawRateDeg} <span style={{fontSize: '14px'}}>°/s</span></div>
             </div>
             
-             <div className="text-center">
-                <div className="text-xs text-[#888]">HEADING</div>
-                <div className="text-2xl text-[#aaa] whitespace-nowrap">{direction} <span className="text-sm">({deg.toFixed(0)}°)</span></div>
+             <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: '#888' }}>HEADING</div>
+                <div style={{ fontSize: '24px', color: '#aaa', whiteSpace: 'nowrap' }}>{direction} <span style={{fontSize: '14px'}}>({deg.toFixed(0)}°)</span></div>
             </div>
         </div>
     );

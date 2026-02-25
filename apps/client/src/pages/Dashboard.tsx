@@ -10,6 +10,21 @@ import { useState, useEffect } from 'react';
 import { BoundingBox3DVisualizer } from '../components/BoundingBox3DVisualizer';
 import { pointsService } from '../apis/PointsService';
 import type { EgoState, BoundingBox3D } from '../types';
+import { 
+    AppShell, 
+    Group, 
+    Title, 
+    Button, 
+    Slider, 
+    Text, 
+    Badge, 
+    ActionIcon, 
+    Divider,
+    Paper,
+    Stack,
+    Box
+} from '@mantine/core';
+import { IconCar, IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
@@ -124,55 +139,80 @@ export default function Dashboard() {
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#111] text-[#eee]">
-        
-        {/* HEADER */}
-        <div className="h-[60px] border-b border-[#333] flex items-center px-5 gap-5 bg-[#1a1a1a]">
-            <h2 className="m-0 text-[#00ffff] italic flex items-center gap-2.5 font-bold text-xl">
-                <span className="text-2xl">🚗</span>
-                <span>Auto-Drive-Viz</span>
-            </h2>
+    <AppShell
+      header={{ height: 60 }}
+      padding={0}
+      styles={{
+        main: { background: '#111', color: '#eee', height: '100vh', display: 'flex', flexDirection: 'column' }
+      }}
+    >
+      <AppShell.Header p="xs" bg="#1a1a1a" withBorder>
+        <Group justify="space-between" h="100%">
             
-            <div className="h-[30px] border-l border-[#444]" />
-            
-            <button 
-                onClick={() => setIsPlaying(!isPlaying)}
-                className={`border-none rounded px-5 py-2 cursor-pointer font-bold ${isPlaying ? 'bg-[#ff4444]' : 'bg-[#44ff44]'}`}
-            >
-                {isPlaying ? 'PAUSE' : 'PLAY'}
-            </button>
+            {/* Logo & Title */}
+            <Group gap="xs">
+                <IconCar size={32} color="#00ffff" />
+                <Title order={3} c="white" style={{ fontStyle: 'italic' }}>
+                    <Text span c="cyan" inherit>Auto-Drive</Text>-Viz
+                </Title>
+            </Group>
 
-            <div className="flex-1 flex items-center gap-2.5">
-                <span>Frame: {currentFrame}</span>
-                <input 
-                    type="range" min={0} max={19} value={currentFrame} 
-                    onChange={e => setCurrentFrame(parseInt(e.target.value))} 
-                    className="flex-1 accent-[#00ffff]"
-                />
-            </div>
+            <Divider orientation="vertical" />
 
-            <div className="h-[30px] border-l border-[#444]" />
+            {/* Playback Controls */}
+            <Group gap="md" style={{ flex: 1 }}>
+                <Button 
+                    color={isPlaying ? 'red' : 'green'} 
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    leftSection={isPlaying ? <IconPlayerPause size={16} /> : <IconPlayerPlay size={16} />}
+                >
+                    {isPlaying ? 'PAUSE' : 'PLAY'}
+                </Button>
 
-            <div className="flex gap-2.5 items-center">
-                <div className="bg-[#222] px-2.5 py-1 rounded border border-[#444] text-xs">
-                    <span className="text-[#ccc] mr-1.5">Mode:</span>
-                    <span className="text-[#00ffff] font-bold">{viewMode.toUpperCase()}</span>
-                </div>
-                <div className="bg-[#222] px-2.5 py-1 rounded border border-[#444] text-xs">
-                    <span className="text-[#ccc] mr-1.5">Source:</span>
-                    <span className={`font-bold ${perceptionMode === 'occupancy' ? 'text-[#ff00ff]' : 'text-[#00ff00'}`}>
-                        {perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}
-                    </span>
-                </div>
-            </div>
-        </div>
+                <Group style={{ flex: 1 }} gap="xs">
+                    <Text size="sm" c="dimmed" w={80}>Frame: {currentFrame}</Text>
+                    <Slider 
+                        value={currentFrame}
+                        onChange={setCurrentFrame}
+                        min={0}
+                        max={19}
+                        step={1}
+                        style={{ flex: 1 }}
+                        color="cyan"
+                        label={null}
+                    />
+                </Group>
+            </Group>
 
-        {/* MAIN LAYOUT */}
-        <div className="flex-1 flex overflow-hidden">
+            <Divider orientation="vertical" />
+
+            {/* Badges */}
+            <Group gap="sm">
+                <Badge variant="outline" color="gray" size="lg" radius="md" styles={{ root: { textTransform: 'none', borderColor: '#444', background: '#222' } }}>
+                    <Group gap={6}>
+                        <Text c="dimmed" size="xs">Mode:</Text>
+                        <Text c="cyan" fw={700}>{viewMode.toUpperCase()}</Text>
+                    </Group>
+                </Badge>
+                
+                <Badge variant="outline" color="gray" size="lg" radius="md" styles={{ root: { textTransform: 'none', borderColor: '#444', background: '#222' } }}>
+                    <Group gap={6}>
+                        <Text c="dimmed" size="xs">Source:</Text>
+                        <Text c={perceptionMode === 'occupancy' ? 'grape' : 'green'} fw={700}>
+                            {perceptionMode === 'occupancy' ? 'VISION' : 'LIDAR'}
+                        </Text>
+                    </Group>
+                </Badge>
+            </Group>
+
+        </Group>
+      </AppShell.Header>
+
+      <AppShell.Main>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 60px)' }}>
             
             {/* LEFT: 3D Visualization */}
-            <div className="flex-[3] relative border-r border-[#333]">
-                
+            <div style={{ flex: 3, position: 'relative', borderRight: '1px solid #333' }}>
                 <CockpitPanel ego={egoState} />
 
                 {viewMode === 'tpv' ? (
@@ -210,24 +250,29 @@ export default function Dashboard() {
                 )}
             </div>
 
-            {/* RIGHT: Analysis */}
-            <div className="flex-1 min-w-[400px] flex flex-col bg-[#1a1a1a]">
-                <div className="flex-1 bg-black border-b border-[#333] flex flex-col">
-                    <div className="px-2.5 py-1.5 text-xs text-[#888] border-b border-[#222] flex justify-between">
-                        <span>SURROUND CAMERAS (4/6)</span>
-                        <span className="text-[#00ff00]">● LIVE</span>
-                    </div>
-                    <div className="flex-1">
+            {/* RIGHT: Analysis Sidebar */}
+            <div style={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', background: '#1a1a1a', borderLeft: '1px solid #333' }}>
+                <Paper bg="dark.8" radius={0} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <Group p="xs" justify="space-between" style={{ borderBottom: '1px solid #333' }}>
+                        <Text size="xs" fw={700} c="dimmed">SURROUND CAMERAS (4/6)</Text>
+                        <Group gap={4}>
+                            <Box w={8} h={8} bg="green" style={{ borderRadius: '50%' }} />
+                            <Text size="xs" c="green" fw={700}>LIVE</Text>
+                        </Group>
+                    </Group>
+                    
+                    <div style={{ flex: 1 }}>
                         <CameraWall 
                             frame={currentFrame} 
                             file={selectedFile} 
                             onTimeUpdate={(_, f) => setCurrentFrame(f)} 
                         />
                     </div>
-                </div>
+                </Paper>
             </div>
 
         </div>
-    </div>
+      </AppShell.Main>
+    </AppShell>
   );
 }

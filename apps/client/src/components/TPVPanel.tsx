@@ -11,17 +11,37 @@ interface TPVPanelProps {
 }
 
 export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) {
+  // Common style for each view
+  const viewStyle = {
+    flex: 1,
+    background: '#000',
+    border: '1px solid #333',
+    position: 'relative' as const,
+    overflow: 'hidden'
+  };
+
+  const labelStyle = {
+    position: 'absolute' as const,
+    top: 5,
+    left: 5,
+    color: '#00ffff',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    zIndex: 10,
+    background: 'rgba(0,0,0,0.5)',
+    padding: '2px 4px'
+  };
 
   // Zoom level for orthographic cameras
   const zoomXY = 8;
   const zoomSide = 12; // Side/Front views usually need more zoom as Z range is small
 
   return (
-    <div className="w-full h-full flex flex-col gap-0.5">
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
       
       {/* Top Row: XY (BEV) - Top View */}
-      <div className="flex-1 bg-black border border-[#333] relative overflow-hidden">
-        <div className="absolute top-1 left-1 text-[#00ffff] text-xs font-bold z-10 bg-black/50 px-1">TPV-XY (Top View)</div>
+      <div style={viewStyle}>
+        <div style={labelStyle}>TPV-XY (Top View)</div>
         <Canvas>
           {/* Looking down from +Z to origin. X is right, Y is up (in screen). 
               KITTI: X forward, Y left. 
@@ -42,7 +62,7 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
       </div>
 
       {/* Bottom Row: XZ (Side) and YZ (Front) */}
-      <div className="flex-1 flex gap-0.5">
+      <div style={{ flex: 1, display: 'flex', gap: '2px' }}>
         
         {/* XZ Plane - Side View (Looking from -Y) 
             KITTI: X forward, Z up.
@@ -50,8 +70,8 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
             Camera at (0, -50, 0), looking at (0,0,0).
             Up vector should be (0,0,1) so Z maps to Screen Y.
         */}
-        <div className="flex-1 bg-black border border-[#333] relative overflow-hidden">
-            <div className="absolute top-1 left-1 text-[#00ffff] text-xs font-bold z-10 bg-black/50 px-1">TPV-XZ (Side View)</div>
+        <div style={viewStyle}>
+            <div style={labelStyle}>TPV-XZ (Side View)</div>
             <Canvas>
                 <OrthographicCamera 
                     makeDefault 
@@ -79,8 +99,8 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
             Camera at (50, 0, 0) looking at (0,0,0).
             Up vector (0,0,1).
         */}
-        <div className="flex-1 bg-black border border-[#333] relative overflow-hidden">
-            <div className="absolute top-1 left-1 text-[#00ffff] text-xs font-bold z-10 bg-black/50 px-1">TPV-YZ (Front View)</div>
+        <div style={viewStyle}>
+            <div style={labelStyle}>TPV-YZ (Front View)</div>
             <Canvas>
                 <OrthographicCamera 
                     makeDefault 
