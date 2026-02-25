@@ -48,7 +48,10 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
     if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
         return `/data/kitti/2011_09_26/${file}/${camId}/data/${frame.toString().padStart(10, '0')}.png`;
     }
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/points/image?camera=${camId}&frame=${frame}&file=${file}`;
+    // Use the pointsService instance to get the correct URL (handling env vars)
+    // Quick fix: Use VITE_API_URL directly here
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    return `${API_BASE}/points/image?frame=${frame}&camera=${camId}&file=${file}`;
   };
 
   return (

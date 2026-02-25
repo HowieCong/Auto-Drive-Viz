@@ -144,7 +144,7 @@ export class PointsService {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   private processTracklets(xml: any): any[] {
-    const items = xml.boost_serialization.tracklets[0].item || [];
+    const items = xml.boost_serialization?.tracklets?.[0]?.item || [];
     const tracks: any[] = [];
     items.forEach((item: any, id: number) => {
       const type = item.objectType[0];
@@ -152,7 +152,7 @@ export class PointsService {
       const w = parseFloat(item.w[0]);
       const l = parseFloat(item.l[0]);
       const first_frame = parseInt(item.first_frame[0]);
-      const poses = item.poses[0].item || [];
+      const poses = item.poses?.[0]?.item || [];
       poses.forEach((pose: any, idx: number) => {
         const frame = first_frame + idx;
         tracks.push({
