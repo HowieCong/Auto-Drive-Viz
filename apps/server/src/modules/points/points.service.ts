@@ -48,9 +48,12 @@ export class PointsService implements OnModuleInit {
   }
 
   async ensureDriveLoaded(drive: string) {
-    if (this.currentDrive !== drive) {
-      console.log(`Switching drive from ${this.currentDrive} to ${drive}`);
-      this.currentDrive = drive;
+    // Strip virtual suffixes to get real drive name
+    const realDrive = drive.replace('_reverse', '').replace('_fast', '');
+    
+    if (this.currentDrive !== realDrive) {
+      console.log(`Switching drive from ${this.currentDrive} to ${realDrive}`);
+      this.currentDrive = realDrive;
       await this.loadKittiData();
     }
   }
@@ -497,11 +500,18 @@ export class PointsService implements OnModuleInit {
   // Helper to simulate a "Different" dataset by reversing the playback for drive_0005
   // Total frames: 108 (0 to 107)
   private getEffectiveFrame(drive: string | undefined, frame: number): number {
-    // If it's the duplicated dataset (0005), reverse the frame index!
-    if (drive && drive.includes('drive_0005')) {
-      const MAX_FRAME = 107;
+    const MAX_FRAME = 107;
+    
+    // Virtual Dataset: Reverse Playback
+    if (drive && drive.includes('_reverse')) {
       return Math.max(0, MAX_FRAME - frame);
     }
+    
+    // Virtual Dataset: Fast Forward (2x)
+    if (drive && drive.includes('_fast')) {
+      return Math.min(MAX_FRAME, frame * 2);
+    }
+
     return frame;
   }
 
@@ -646,12 +656,21 @@ export class PointsService implements OnModuleInit {
   getFiles(): string[] {
     try {
       if (!fs.existsSync(this.kittiRoot)) return [];
-      return fs
+      const realFiles = fs
         .readdirSync(this.kittiRoot)
         .filter((file) =>
           fs.statSync(path.join(this.kittiRoot, file)).isDirectory(),
         )
         .filter((dir) => dir.includes('_drive_')); // Filter to only drive folders
+        
+      // Generate Virtual Datasets
+      const virtualFiles = [];
+      realFiles.forEach(file => {
+          virtualFiles.push(`${file}_reverse`);
+          virtualFiles.push(`${file}_fast`);
+      });
+      
+      return [...realFiles, ...virtualFiles];
     } catch {
       return [];
     }

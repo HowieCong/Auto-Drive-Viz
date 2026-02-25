@@ -18,7 +18,7 @@ import type { EgoState, BoundingBox3D } from '../types';
 
 export default function Dashboard() {
   const [viewMode, setViewMode] = useState<'perspective' | 'bev' | 'tpv'>('perspective');
-  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy' | 'model'>('occupancy'); 
+  const [perceptionMode, setPerceptionMode] = useState<'lidar' | 'occupancy'>('occupancy'); 
   
   const [fileList, setFileList] = useState<string[]>(['2011_09_26_drive_0001_sync']);
   const [selectedFile, setSelectedFile] = useState<string>('2011_09_26_drive_0001_sync');
@@ -109,48 +109,34 @@ export default function Dashboard() {
     },
     'Perception Source': {
         options: { 
-            'LiDAR (Point Cloud)': 'lidar',
-            'Model Inference (PointPillars)': 'model' 
+            'LiDAR (Point Cloud)': 'lidar'
         },
         value: 'lidar',
-        onChange: (v: 'lidar' | 'occupancy' | 'model') => setPerceptionMode(v)
+        onChange: (v: 'lidar' | 'occupancy') => setPerceptionMode(v)
     },
   }, [fileList]); // Re-render controls when fileList changes
 
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
-  const sceneUrl = `http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}&source=${perceptionMode === 'model' ? 'model' : 'gt'}`;
+  // const sceneUrl = `http://localhost:3000/points/scene?frame=${currentFrame}&file=${selectedFile}&source=${perceptionMode === 'model' ? 'model' : 'gt'}`;
 
   // Sync State (Updated logic to handle Model Inference)
   useEffect(() => {
       const updateState = async () => {
-        if (perceptionMode === 'model') {
-            // If model mode, we must fetch fresh data from backend (which proxies to python)
-            // Metadata cache only contains GT.
-            try {
-                const res = await fetch(sceneUrl);
-                const data = await res.json();
-                setObjects3D(data.objects);
+        // Ground Truth Mode: Use Cache
+        if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
+            const frameData = sceneMetadata[currentFrame];
+            setObjects3D(frameData.objects);
+            setEgoState(frameData.ego);
+        } else if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
+            pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
                 setEgoState(data.ego);
-            } catch (e) {
-                console.error(e);
-            }
-        } else {
-            // Ground Truth Mode: Use Cache
-            if (sceneMetadata.length > 0 && sceneMetadata[currentFrame]) {
-                const frameData = sceneMetadata[currentFrame];
-                setObjects3D(frameData.objects);
-                setEgoState(frameData.ego);
-            } else if (import.meta.env.VITE_USE_STATIC_DATA === 'true') {
-                pointsService.getSceneObjects(currentFrame).then((data: { ego: EgoState, objects: BoundingBox3D[] }) => {
-                    setEgoState(data.ego);
-                    setObjects3D(data.objects);
-                });
-            }
+                setObjects3D(data.objects);
+            });
         }
       };
       
       updateState();
-  }, [currentFrame, sceneMetadata, perceptionMode, sceneUrl]);
+  }, [currentFrame, sceneMetadata, perceptionMode]);
 
   return (
     <Box sx={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', color: 'text.primary' }}>
@@ -243,13 +229,13 @@ export default function Dashboard() {
                         }} 
                     />
                     <Chip 
-                        label={`Source: ${perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : perceptionMode === 'model' ? 'AI MODEL (MOCK)' : 'LIDAR (RAW)'}`} 
+                        label={`Source: ${perceptionMode === 'occupancy' ? 'VISION (OVERLAY)' : 'LIDAR (RAW)'}`} 
                         variant="outlined" 
                         sx={{ 
                             borderColor: '#444', 
                             bgcolor: '#222',
                             '& .MuiChip-label': { 
-                                color: perceptionMode === 'occupancy' ? 'secondary.main' : perceptionMode === 'model' ? 'warning.main' : 'success.main', 
+                                color: perceptionMode === 'occupancy' ? 'secondary.main' : 'success.main', 
                                 fontWeight: 'bold' 
                             }
                         }} 
