@@ -179,10 +179,9 @@ export function VideoContainer({
                                 y={box.y - 5}
                                 fill="#00ff00"
                                 fontSize="14"
-                                fontWeight="bold"
-                                style={{ textShadow: '1px 1px 2px black' }}
+                                fontFamily="Arial"
                             >
-                                {box.label}
+                                {box.label} {(box.confidence * 100).toFixed(0)}%
                             </text>
                         </g>
                     ))}
