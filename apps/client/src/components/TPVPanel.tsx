@@ -42,7 +42,7 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
       <div style={viewStyle}>
         <div style={labelStyle}>TPV-XY (Top)</div>
         <Canvas>
-          <OrthographicCamera makeDefault position={[0, 0, 50]} zoom={zoom} up={[0, 1, 0]} />
+          <OrthographicCamera makeDefault position={[0, 0, 50]} zoom={zoom} up={[0, 1, 0]} near={-100} far={100} />
           <ambientLight intensity={0.5} />
           {/* Grid on XY plane */}
           <gridHelper args={[100, 10, 0x444444, 0x222222]} rotation={[Math.PI/2, 0, 0]} />
@@ -57,22 +57,17 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
       {/* Bottom Row: XZ (Front) and YZ (Side) */}
       <div style={{ flex: 1, display: 'flex', gap: '2px' }}>
         
-        {/* XZ Plane (Front View) */}
-        {/* Looking from -Y direction? No, Front is usually looking along X or Y. 
-            KITTI: X forward, Y left, Z up.
-            Front View: Projection on YZ plane (looking from X)? Or Projection on XZ (looking from Y)?
-            Usually "Front View" means looking at the front of the car.
-            If X is forward, looking from front means looking from +X towards -X. Projection is YZ.
-            BUT TPV usually defines planes: XY, XZ, YZ.
-            TPV_xz: Projection onto XZ plane. This is "Side View" if Y is left-right.
-            TPV_yz: Projection onto YZ plane. This is "Front View" if X is depth.
-        */}
+        {/* XZ Plane (Side View - Looking from Y) */}
+        {/* KITTI: X forward, Y left, Z up. */}
+        {/* Looking from Y axis (Left side) towards vehicle */}
         <div style={viewStyle}>
             <div style={labelStyle}>TPV-XZ (Side)</div>
             <Canvas>
-                {/* Camera looking along Y axis (from -50 to 0) */}
-                <OrthographicCamera makeDefault position={[0, -50, 0]} zoom={zoom} up={[0, 0, 1]} />
+                {/* Position on Y axis, looking at origin. Up is Z. */}
+                <OrthographicCamera makeDefault position={[0, -50, 0]} zoom={zoom} up={[0, 0, 1]} near={-100} far={100} />
                 <ambientLight intensity={0.5} />
+                {/* Grid on XZ plane? No, GridHelper is usually XZ plane by default. We need to rotate it to match view? */}
+                {/* Default GridHelper is on XZ plane (y=0). */}
                 <gridHelper args={[100, 10, 0x444444, 0x222222]} />
                 
                 <PointCloudViewer size={pointSize} url={url} />
@@ -82,13 +77,15 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
             </Canvas>
         </div>
 
-        {/* YZ Plane (Front) */}
+        {/* YZ Plane (Front View - Looking from X) */}
+        {/* Looking from X axis (Front) towards vehicle */}
         <div style={viewStyle}>
             <div style={labelStyle}>TPV-YZ (Front)</div>
             <Canvas>
-                {/* Camera looking along X axis (from 50 to 0) */}
-                <OrthographicCamera makeDefault position={[50, 0, 0]} zoom={zoom} up={[0, 0, 1]} />
+                {/* Position on X axis, looking at origin. Up is Z. */}
+                <OrthographicCamera makeDefault position={[50, 0, 0]} zoom={zoom} up={[0, 0, 1]} near={-100} far={100} />
                 <ambientLight intensity={0.5} />
+                {/* Grid on YZ plane */}
                 <gridHelper args={[100, 10, 0x444444, 0x222222]} rotation={[0, 0, Math.PI/2]} />
                 
                 <PointCloudViewer size={pointSize} url={url} />
