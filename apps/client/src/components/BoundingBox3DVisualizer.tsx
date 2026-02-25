@@ -50,7 +50,7 @@ export function BoundingBox3DVisualizer({ box, color }: BoundingBox3DVisualizerP
       </lineSegments>
 
       {/* Label & Score */}
-      <Html position={[0, 0, h / 2 + 0.5]} center>
+      <Html position={[0, 0, h / 2 + 0.5]} center zIndexRange={[0, 50]}>
         <div style={{ 
             background: 'rgba(0,0,0,0.8)', 
             padding: '2px 5px', 
@@ -58,7 +58,8 @@ export function BoundingBox3DVisualizer({ box, color }: BoundingBox3DVisualizerP
             color: displayColor, 
             fontSize: '10px', 
             whiteSpace: 'nowrap',
-            border: `1px solid ${displayColor}`
+            border: `1px solid ${displayColor}`,
+            userSelect: 'none'
         }}>
           {label} {score !== undefined && `(${(score * 100).toFixed(0)}%)`}
         </div>

@@ -109,7 +109,7 @@ export function VideoContainer({
           width: '100vw',
           height: '100vh',
           background: 'rgba(0,0,0,0.9)',
-          zIndex: 9999,
+          zIndex: 10000, // Ensure it's higher than anything else (default Html zIndexRange can go high)
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
