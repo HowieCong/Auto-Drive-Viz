@@ -234,11 +234,25 @@ export class PointsService implements OnModuleInit {
       if (drive) await this.ensureDriveLoaded(drive);
       const effectiveFrame = this.getEffectiveFrame(drive, frame);
 
+      // Get real objects for this frame to pass labels to Python
+      const { objects } = this.getRealSceneObjects(effectiveFrame);
+
+      // If no objects, return empty
+      if (objects.length === 0) return { results: [] };
+
+      // Prepare payload: query + list of objects (id, label)
+      // Python will compute similarity between query and each object's label
+      const object_list = objects.map((o) => ({
+        id: o.id.toString(),
+        label: o.label,
+      }));
+
       const response = await axios.post(`${this.ALGO_SERVICE_URL}/search`, {
         query,
         file: this.currentDrive,
         frame: effectiveFrame,
         camera: 'image_02',
+        objects: object_list,
       });
 
       return response.data;

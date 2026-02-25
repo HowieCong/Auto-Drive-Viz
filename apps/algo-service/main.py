@@ -22,11 +22,16 @@ class InferenceRequest(BaseModel):
     file: str
     frame: int
 
+class SearchObject(BaseModel):
+    id: str
+    label: str
+
 class SearchRequest(BaseModel):
     file: str
     frame: int
     query: str
-    camera: str = "image_02" # Default to Front Color Camera
+    camera: str = "image_02"
+    objects: List[SearchObject] = [] # List of objects to score against
 
 @app.get("/")
 def read_root():
@@ -99,14 +104,27 @@ def semantic_search(req: SearchRequest):
     # Let's do a "Text-to-Label" matching using CLIP text encoder!
     # We compare Query embedding with Label embedding.
     
-    mock_objects = [
+    # Use passed objects if available, otherwise use mock (fallback)
+    target_objects = req.objects if req.objects else [
         { "id": "pred_1", "label": "Car" },
         { "id": "pred_2", "label": "Pedestrian" },
         { "id": "pred_3", "label": "Car" },
         { "id": "pred_4", "label": "Cyclist" }
     ]
     
-    labels = [obj["label"] for obj in mock_objects]
+    # Handle Pydantic models vs Dicts
+    labels = []
+    ids = []
+    for obj in target_objects:
+        if isinstance(obj, dict):
+            labels.append(obj["label"])
+            ids.append(obj["id"])
+        else:
+            labels.append(obj.label)
+            ids.append(obj.id)
+            
+    if not labels:
+        return {"results": []}
     
     # Compute Similarity between Query and Labels using CLIP Text Encoder
     inputs = processor(text=[req.query] + labels, return_tensors="pt", padding=True)
@@ -128,12 +146,12 @@ def semantic_search(req: SearchRequest):
         scores = [scores]
         
     results = []
-    for i, obj in enumerate(mock_objects):
+    for i, obj_id in enumerate(ids):
         # Normalize score to 0-1 range (CLIP logits can be large)
         # Raw cosine similarity is -1 to 1. Usually 0.2-0.3 is high for CLIP.
         # Let's just return raw score and handle coloring in frontend.
         results.append({
-            "id": obj["id"],
+            "id": obj_id,
             "score": float(scores[i])
         })
         
