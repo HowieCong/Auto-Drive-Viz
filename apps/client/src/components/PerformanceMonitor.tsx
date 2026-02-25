@@ -1,42 +1,54 @@
+import { useControls, monitor } from 'leva';
 import { addEffect } from '@react-three/fiber';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-export function usePerformanceHistory() {
-    const [history, setHistory] = useState<{ fps: number[], frameTime: number[] }>({ fps: [], frameTime: [] });
-    const [current, setCurrent] = useState({ fps: 60, frameTime: 0 });
+export function usePerformanceMonitor() {
+    const fpsRef = useRef(60);
+    const msRef = useRef(0);
+
+    // Controls for displaying numeric values
+    const [stats, setStats] = useControls('Performance', () => ({
+        'Current FPS': { value: 60, editable: false },
+        'Current Frame (ms)': { value: 0, editable: false },
+    }), { collapsed: false });
 
     useEffect(() => {
         let begin = performance.now();
         let prev = begin;
         let frames = 0;
-        const maxPoints = 30; // Number of points in sparkline
+        let lastUpdate = 0;
 
         const unsub = addEffect(() => {
             frames++;
             const time = performance.now();
             
-            // MS
-            const frameTime = time - begin;
+            // MS (Frame time)
+            msRef.current = time - begin;
             begin = time;
 
-            // FPS Update (every 200ms for smoother graph)
-            if (time >= prev + 200) {
+            // Update stats every 500ms to avoid UI flicker
+            if (time - lastUpdate > 500) {
+                // Calculate FPS
                 const fps = Math.round((frames * 1000) / (time - prev));
+                fpsRef.current = fps;
+                
+                // Update Leva values
+                setStats({ 
+                    'Current FPS': fps,
+                    'Current Frame (ms)': Math.round(msRef.current * 100) / 100
+                });
+                
                 prev = time;
                 frames = 0;
-                
-                setCurrent({ fps, frameTime: Number(frameTime.toFixed(1)) });
-
-                setHistory(prevHist => {
-                    const newFps = [...prevHist.fps, fps].slice(-maxPoints);
-                    const newFrameTime = [...prevHist.frameTime, frameTime].slice(-maxPoints);
-                    return { fps: newFps, frameTime: newFrameTime };
-                });
+                lastUpdate = time;
             }
         });
 
         return unsub;
-    }, []);
+    }, [setStats]);
 
-    return { ...current, history };
+    useControls('Performance', {
+        FPS: monitor(() => fpsRef.current, { graph: true, interval: 100 }),
+        'Frame (ms)': monitor(() => msRef.current, { graph: true, interval: 30 }),
+    }, { collapsed: false });
 }
