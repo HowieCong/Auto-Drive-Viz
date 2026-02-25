@@ -3,6 +3,7 @@ import { OrthographicCamera } from '@react-three/drei';
 import { PointCloudViewer } from './PointCloudViewer';
 import { BoundingBox3DVisualizer } from './BoundingBox3DVisualizer';
 import type { BoundingBox3D } from '../types';
+import { Box, Typography, Paper } from '@mui/material';
 
 interface TPVPanelProps {
   url?: string;
@@ -11,45 +12,46 @@ interface TPVPanelProps {
 }
 
 export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) {
-  // Common style for each view
-  const viewStyle = {
-    flex: 1,
-    background: '#000',
-    border: '1px solid #333',
-    position: 'relative' as const,
-    overflow: 'hidden'
-  };
-
-  const labelStyle = {
-    position: 'absolute' as const,
-    top: 5,
-    left: 5,
-    color: '#00ffff',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    zIndex: 10,
-    background: 'rgba(0,0,0,0.5)',
-    padding: '2px 4px'
-  };
-
   // Zoom level for orthographic cameras
   const zoomXY = 8;
   const zoomSide = 12; // Side/Front views usually need more zoom as Z range is small
 
+  const ViewContainer = ({ label, children }: { label: string, children: React.ReactNode }) => (
+      <Paper sx={{ 
+          flex: 1, 
+          position: 'relative', 
+          overflow: 'hidden', 
+          border: 1, 
+          borderColor: 'divider', 
+          bgcolor: 'black',
+          borderRadius: 0 
+      }}>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+                position: 'absolute', 
+                top: 5, 
+                left: 5, 
+                zIndex: 10, 
+                bgcolor: 'rgba(0,0,0,0.6)', 
+                px: 1, 
+                borderRadius: 1,
+                color: 'primary.main',
+                fontWeight: 'bold'
+            }}
+          >
+              {label}
+          </Typography>
+          {children}
+      </Paper>
+  );
+
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+    <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 0.5, bgcolor: 'background.default' }}>
       
       {/* Top Row: XY (BEV) - Top View */}
-      <div style={viewStyle}>
-        <div style={labelStyle}>TPV-XY (Top View)</div>
+      <ViewContainer label="TPV-XY (Top View)">
         <Canvas>
-          {/* Looking down from +Z to origin. X is right, Y is up (in screen). 
-              KITTI: X forward, Y left. 
-              To match standard map: X should be UP, Y should be LEFT? 
-              Let's stick to standard Three.js convention first: Y is up.
-              If Camera at (0,0,50), looking at (0,0,0), Up (0,1,0).
-              Then Screen X = World X, Screen Y = World Y.
-          */}
           <OrthographicCamera makeDefault position={[0, 0, 50]} zoom={zoomXY} near={-100} far={100} up={[0, 1, 0]} />
           <ambientLight intensity={0.5} />
           <gridHelper args={[100, 10, 0x444444, 0x222222]} rotation={[Math.PI/2, 0, 0]} />
@@ -59,19 +61,13 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
              <BoundingBox3DVisualizer key={obj.id} box={obj} color="#00ff00" />
           ))}
         </Canvas>
-      </div>
+      </ViewContainer>
 
       {/* Bottom Row: XZ (Side) and YZ (Front) */}
-      <div style={{ flex: 1, display: 'flex', gap: '2px' }}>
+      <Box sx={{ flex: 1, display: 'flex', gap: 0.5 }}>
         
-        {/* XZ Plane - Side View (Looking from -Y) 
-            KITTI: X forward, Z up.
-            We want X horizontal, Z vertical.
-            Camera at (0, -50, 0), looking at (0,0,0).
-            Up vector should be (0,0,1) so Z maps to Screen Y.
-        */}
-        <div style={viewStyle}>
-            <div style={labelStyle}>TPV-XZ (Side View)</div>
+        {/* XZ Plane - Side View */}
+        <ViewContainer label="TPV-XZ (Side View)">
             <Canvas>
                 <OrthographicCamera 
                     makeDefault 
@@ -83,7 +79,6 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
                     onUpdate={c => c.lookAt(0, 0, 0)}
                 />
                 <ambientLight intensity={0.5} />
-                {/* Grid on XZ plane */}
                 <gridHelper args={[100, 10, 0x444444, 0x222222]} />
                 
                 <PointCloudViewer size={pointSize} url={url} />
@@ -91,16 +86,10 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
                     <BoundingBox3DVisualizer key={obj.id} box={obj} color="#ffff00" />
                 ))}
             </Canvas>
-        </div>
+        </ViewContainer>
 
-        {/* YZ Plane - Front View (Looking from -X or +X) 
-            KITTI: Y left, Z up.
-            We want Y horizontal, Z vertical.
-            Camera at (50, 0, 0) looking at (0,0,0).
-            Up vector (0,0,1).
-        */}
-        <div style={viewStyle}>
-            <div style={labelStyle}>TPV-YZ (Front View)</div>
+        {/* YZ Plane - Front View */}
+        <ViewContainer label="TPV-YZ (Front View)">
             <Canvas>
                 <OrthographicCamera 
                     makeDefault 
@@ -112,7 +101,6 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
                     onUpdate={c => c.lookAt(0, 0, 0)}
                 />
                 <ambientLight intensity={0.5} />
-                {/* Grid on YZ plane */}
                 <gridHelper args={[100, 10, 0x444444, 0x222222]} rotation={[0, 0, Math.PI/2]} />
                 
                 <PointCloudViewer size={pointSize} url={url} />
@@ -120,8 +108,8 @@ export function TPVPanel({ url, objects = [], pointSize = 0.1 }: TPVPanelProps) 
                     <BoundingBox3DVisualizer key={obj.id} box={obj} color="#ff0000" />
                 ))}
             </Canvas>
-        </div>
-      </div>
-    </div>
+        </ViewContainer>
+      </Box>
+    </Box>
   );
 }
