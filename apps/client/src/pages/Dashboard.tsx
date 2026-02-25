@@ -246,7 +246,7 @@ export default function Dashboard() {
             <Box sx={{ flex: 1, minWidth: '400px', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
                 <Box sx={{ flex: 1, bgcolor: '#000', borderBottom: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ p: 1, fontSize: '12px', color: 'text.secondary', borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="caption">SURROUND CAMERAS (4/6)</Typography>
+                        <Typography variant="caption">STEREO CAMERAS (Front)</Typography>
                         <Typography variant="caption" sx={{ color: 'success.main' }}>● LIVE</Typography>
                     </Box>
                     <Box sx={{ flex: 1 }}>
