@@ -1,4 +1,4 @@
-import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Button, Slider, Chip, Divider, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -98,11 +98,11 @@ export default function Dashboard() {
         value: 'perspective',
         onChange: (v: 'perspective' | 'bev' | 'tpv') => setViewMode(v)
     },
-    'Resources': {
-        options: fileList,
-        value: selectedFile,
-        onChange: (v: string) => setSelectedFile(v)
-    },
+    // 'Resources': {
+    //     options: fileList,
+    //     value: selectedFile,
+    //     onChange: (v: string) => setSelectedFile(v)
+    // },
   }, [fileList]); // Re-render controls when fileList changes
 
   const url = `http://localhost:3000/points/sample?frame=${currentFrame}&file=${selectedFile}`;
@@ -164,6 +164,27 @@ export default function Dashboard() {
                 <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
 
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <FormControl size="small" sx={{ minWidth: 200, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1 }}>
+                        <Select
+                            value={selectedFile}
+                            onChange={(e) => setSelectedFile(e.target.value)}
+                            displayEmpty
+                            inputProps={{ 'aria-label': 'Select Drive' }}
+                            sx={{ 
+                                color: 'white',
+                                '& .MuiSelect-icon': { color: 'white' },
+                                '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                                fontSize: '0.875rem'
+                            }}
+                        >
+                            {fileList.map((file) => (
+                                <MenuItem key={file} value={file}>
+                                    {file}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
                     <Chip 
                         label={`View: ${viewMode.toUpperCase()}`} 
                         variant="outlined" 
