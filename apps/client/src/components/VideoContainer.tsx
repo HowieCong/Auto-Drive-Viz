@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import type { BoundingBox2D } from '../types';
+import { 
+    Box, 
+    Typography, 
+    IconButton, 
+    Modal, 
+    Paper, 
+    Slider, 
+    Button, 
+    Select, 
+    MenuItem,
+    Stack
+} from '@mui/material';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import CloseIcon from '@mui/icons-material/Close';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import DownloadIcon from '@mui/icons-material/Download';
 
 interface VideoContainerProps {
   label: string;
@@ -38,7 +54,7 @@ export function VideoContainer({
 
   // Modal Animation Loop
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isModalOpen && isPlaying) {
       interval = setInterval(() => {
         setModalFrame(f => {
@@ -67,86 +83,87 @@ export function VideoContainer({
   };
 
   return (
-    <div style={{ position: 'relative', border: '1px solid #333', flexShrink: 0, background: '#000', display: 'flex', flexDirection: 'column' }}>
+    <Paper 
+        elevation={0}
+        sx={{ 
+            position: 'relative', 
+            border: 1, 
+            borderColor: 'divider', 
+            flexShrink: 0, 
+            bgcolor: 'black', 
+            display: 'flex', 
+            flexDirection: 'column',
+            borderRadius: 0
+        }}
+    >
       {/* Top Bar - Now outside video, above it */}
-      <div style={{
+      <Box sx={{
         width: '100%',
-        background: 'rgba(26, 26, 26, 1)', // Solid background
-        borderBottom: '1px solid #333',
-        padding: '5px 10px',
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
+        px: 1,
+        py: 0.5,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        boxSizing: 'border-box'
       }}>
-        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>{label}</span>
-        <button 
+        <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{label}</Typography>
+        <IconButton 
+          size="small"
           onClick={() => setIsModalOpen(true)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#00ffff',
-            cursor: 'pointer',
-            fontSize: '16px',
-            padding: 0,
-            lineHeight: 1
-          }}
+          color="primary"
           title="Open Player"
         >
-          ⤢
-        </button>
-      </div>
+          <OpenInFullIcon fontSize="small" />
+        </IconButton>
+      </Box>
 
       {/* Video Content (Preview) */}
       {children}
 
       {/* Modal */}
-      {isModalOpen && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.9)',
-          zIndex: 10000, // Ensure it's higher than anything else (default Html zIndexRange can go high)
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
+      <Modal
+        open={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setIsPlaying(false); }}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+          <Paper sx={{
             width: '80%',
             maxWidth: '1000px',
-            background: '#1a1a1a',
-            borderRadius: '8px',
+            bgcolor: '#1a1a1a',
+            outline: 'none',
+            display: 'flex',
+            flexDirection: 'column',
             overflow: 'hidden',
-            border: '1px solid #333',
-            boxShadow: '0 0 50px rgba(0,0,0,0.5)'
+            boxShadow: 24
           }}>
             {/* Modal Header */}
-            <div style={{
-              padding: '15px 20px',
-              borderBottom: '1px solid #333',
+            <Box sx={{
+              p: 2,
+              borderBottom: 1,
+              borderColor: 'divider',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: 'center',
+              bgcolor: 'background.paper'
             }}>
-              <h3 style={{ margin: 0, color: '#fff' }}>{label} - Player</h3>
-              <button 
+              <Typography variant="h6" color="text.primary">{label} - Player</Typography>
+              <IconButton 
                 onClick={() => { setIsModalOpen(false); setIsPlaying(false); }}
-                style={{ background: 'none', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}
+                sx={{ color: 'text.secondary' }}
               >
-                ✕
-              </button>
-            </div>
+                <CloseIcon />
+              </IconButton>
+            </Box>
 
             {/* Modal Content */}
-            <div style={{ padding: '20px', background: '#000', display: 'flex', justifyContent: 'center' }}>
-               <div style={{ width: '100%', maxHeight: '60vh', display: 'flex', justifyContent: 'center', position: 'relative' }}>
-                 <img 
+            <Box sx={{ p: 2, bgcolor: 'black', display: 'flex', justifyContent: 'center', position: 'relative' }}>
+               <Box sx={{ width: '100%', maxHeight: '60vh', display: 'flex', justifyContent: 'center', position: 'relative' }}>
+                 <Box 
+                    component="img"
                     src={src.replace(/frame=\d+/, `frame=${modalFrame}`)}
-                    style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }}
+                    sx={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }}
                     alt="Full View"
                  />
                  
@@ -204,77 +221,61 @@ export function VideoContainer({
                          );
                      })}
                  </svg>
-               </div>
-            </div>
+               </Box>
+            </Box>
 
             {/* Modal Controls */}
-            <div style={{ padding: '20px', background: '#222' }}>
+            <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
               
               {/* Progress Bar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                <span style={{ color: '#888', fontSize: '12px', minWidth: '40px' }}>{modalFrame}</span>
-                <input 
-                  type="range" 
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ minWidth: 20 }}>{modalFrame}</Typography>
+                <Slider 
                   min={0} 
                   max={totalFrames - 1} 
                   value={modalFrame}
-                  onChange={(e) => setModalFrame(parseInt(e.target.value))}
-                  style={{ flex: 1, accentColor: '#00ffff', cursor: 'pointer' }}
+                  onChange={(_, v) => setModalFrame(v as number)}
+                  step={1}
+                  sx={{ flex: 1 }}
                 />
-                <span style={{ color: '#888', fontSize: '12px', minWidth: '40px' }}>{totalFrames}</span>
-              </div>
+                <Typography variant="caption" color="text.secondary" sx={{ minWidth: 20 }}>{totalFrames}</Typography>
+              </Stack>
 
               {/* Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <button 
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Button 
+                    variant="contained"
+                    color={isPlaying ? "error" : "success"}
+                    startIcon={isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
                     onClick={() => setIsPlaying(!isPlaying)}
-                    style={{
-                      background: isPlaying ? '#ff4444' : '#44ff44',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 20px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      color: '#000'
-                    }}
                   >
                     {isPlaying ? 'PAUSE' : 'PLAY'}
-                  </button>
+                  </Button>
 
-                  <select 
+                  <Select 
                     value={playbackSpeed} 
-                    onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-                    style={{ background: '#333', color: '#fff', border: '1px solid #555', padding: '5px', borderRadius: '4px' }}
+                    onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+                    size="small"
+                    sx={{ minWidth: 80 }}
                   >
-                    <option value="0.5">0.5x</option>
-                    <option value="1">1.0x</option>
-                    <option value="2">2.0x</option>
-                  </select>
-                </div>
+                    <MenuItem value={0.5}>0.5x</MenuItem>
+                    <MenuItem value={1}>1.0x</MenuItem>
+                    <MenuItem value={2}>2.0x</MenuItem>
+                  </Select>
+                </Stack>
 
-                <button 
+                <Button 
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
                   onClick={handleDownload}
-                  style={{
-                    background: '#333',
-                    border: '1px solid #555',
-                    color: '#fff',
-                    padding: '8px 15px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px'
-                  }}
                 >
-                  <span>⬇</span> Download Frame
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
+                  Download Frame
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+      </Modal>
+    </Paper>
   );
 }

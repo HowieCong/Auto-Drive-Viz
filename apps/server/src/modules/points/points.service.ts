@@ -17,6 +17,7 @@ export class PointsService implements OnModuleInit {
   // Cache
   private tracklets: any[] = [];
   private calibVeloToCam: number[][] = []; // 4x4
+  private R_rect_00: number[][] = []; // 4x4
   private calibCamToCam: Record<string, number[][]> = {}; // P_rect_00, 01, 02, 03
 
   constructor() {
@@ -60,6 +61,7 @@ export class PointsService implements OnModuleInit {
         'utf8',
       );
       this.calibCamToCam = this.parseCamCalib(calibCam);
+      this.R_rect_00 = this.parseRect00(calibCam);
       console.log('Loaded Calibration');
 
       // 2. Load Tracklets for Current Drive
@@ -141,6 +143,31 @@ export class PointsService implements OnModuleInit {
     });
 
     return calibs;
+  }
+
+  parseRect00(content: string): number[][] {
+    const lines = content.split('\n');
+    const line = lines.find((l) => l.startsWith('R_rect_00:'));
+    if (!line)
+      return [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+
+    const R = line
+      .split(' ')
+      .slice(1)
+      .map(Number)
+      .filter((n) => !isNaN(n));
+    // 3x3 -> 4x4
+    return [
+      [R[0], R[1], R[2], 0],
+      [R[3], R[4], R[5], 0],
+      [R[6], R[7], R[8], 0],
+      [0, 0, 0, 1],
+    ];
   }
 
   processTracklets(xml: any): any[] {
@@ -356,7 +383,7 @@ export class PointsService implements OnModuleInit {
         };
       });
 
-      // 2. Transform Velo -> Cam -> Image
+      // 2. Transform Velo -> Cam0_Unrect -> Cam0_Rect -> Image
       let minU = Infinity;
       let minV = Infinity;
       let maxU = -Infinity;
@@ -364,11 +391,20 @@ export class PointsService implements OnModuleInit {
       let hasValidPoint = false;
 
       cornersVelo.forEach((p_velo) => {
-        const p_cam = this.applyMatrix(p_velo, this.calibVeloToCam);
+        // 1. Velo -> Cam0 Unrectified
+        const p_cam_unrect = this.applyMatrix(p_velo, this.calibVeloToCam);
+        // 2. Cam0 Unrectified -> Cam0 Rectified
+        const p_cam_rect = this.applyMatrix(p_cam_unrect, this.R_rect_00);
 
         // Check if point is in front of camera (Z > 0)
-        if (p_cam.z > 0) {
-          const uv = this.projectCamToImage(p_cam.x, p_cam.y, p_cam.z, camId);
+        // Note: Using rectified Z
+        if (p_cam_rect.z > 0) {
+          const uv = this.projectCamToImage(
+            p_cam_rect.x,
+            p_cam_rect.y,
+            p_cam_rect.z,
+            camId,
+          );
           if (uv) {
             hasValidPoint = true;
             minU = Math.min(minU, uv.u);
@@ -412,11 +448,15 @@ export class PointsService implements OnModuleInit {
     const P = this.calibCamToCam[cameraId]; // Use specific camera matrix
     if (!P) return null;
 
-    // u = (P00*x + P01*y + P02*z + P03) / z
-    // v = (P10*x + P11*y + P12*z + P13) / z
+    // u = (P00*x + P01*y + P02*z + P03) / w
+    // v = (P10*x + P11*y + P12*z + P13) / w
+    // w = P20*x + P21*y + P22*z + P23
 
-    const u = (P[0][0] * x + P[0][1] * y + P[0][2] * z + P[0][3]) / z;
-    const v = (P[1][0] * x + P[1][1] * y + P[1][2] * z + P[1][3]) / z;
+    const w = P[2][0] * x + P[2][1] * y + P[2][2] * z + P[2][3];
+    if (w === 0) return null;
+
+    const u = (P[0][0] * x + P[0][1] * y + P[0][2] * z + P[0][3]) / w;
+    const v = (P[1][0] * x + P[1][1] * y + P[1][2] * z + P[1][3]) / w;
     return { u, v };
   }
 

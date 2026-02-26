@@ -1,6 +1,7 @@
 import type { BoundingBox3D } from '../types';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { Box, Typography } from '@mui/material';
 
 interface BoundingBox3DVisualizerProps {
   box: BoundingBox3D & { score?: number }; // Optional score for search results
@@ -51,18 +52,19 @@ export function BoundingBox3DVisualizer({ box, color }: BoundingBox3DVisualizerP
 
       {/* Label & Score */}
       <Html position={[0, 0, h / 2 + 0.5]} center zIndexRange={[0, 50]}>
-        <div style={{ 
-            background: 'rgba(0,0,0,0.8)', 
-            padding: '2px 5px', 
-            borderRadius: '4px', 
-            color: displayColor, 
-            fontSize: '10px', 
-            whiteSpace: 'nowrap',
-            border: `1px solid ${displayColor}`,
+        <Box sx={{ 
+            bgcolor: 'rgba(0,0,0,0.8)', 
+            px: 0.6,
+            py: 0.2,
+            borderRadius: 1, 
+            border: 1,
+            borderColor: displayColor,
             userSelect: 'none'
         }}>
-          {label} {score !== undefined && `(${(score * 100).toFixed(0)}%)`}
-        </div>
+          <Typography variant="caption" sx={{ color: displayColor, fontSize: '10px', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
+            {label} {score !== undefined && `(${(score * 100).toFixed(0)}%)`}
+          </Typography>
+        </Box>
       </Html>
     </group>
   );

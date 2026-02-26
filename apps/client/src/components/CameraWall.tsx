@@ -61,7 +61,20 @@ export function CameraWall({ frame, file, onTimeUpdate }: CameraWallProps) {
         height: '100%', 
         overflowY: 'auto', 
         gap: 0.5,
-        bgcolor: 'black' 
+        bgcolor: 'black',
+        '&::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: '#111', 
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#444', 
+          borderRadius: '4px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: '#666', 
+        },
     }}>
       {CAMERAS.map((cam) => (
         <VideoContainer
