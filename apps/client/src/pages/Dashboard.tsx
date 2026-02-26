@@ -20,7 +20,7 @@ export default function Dashboard() {
   
   const [fileList, setFileList] = useState<string[]>(['2011_09_26_drive_0001_sync']);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedFile, setSelectedFile] = useState<string>('2011_09_26_drive_0001_sync');
+  const [selectedFile] = useState<string>('2011_09_26_drive_0001_sync');
   
   // State
   const [currentFrame, setCurrentFrame] = useState(0);
